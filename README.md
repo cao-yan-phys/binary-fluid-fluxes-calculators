@@ -11,7 +11,8 @@ also supported.
   <img src="docs/assets/binary_cm_orbit_angular_power.png" alt="Angular distribution of sound-wave energy flux" width="760">
 </p>
 <p align="center">
-  <em>(parameters: nu=0.20, e=0.45, n0=0, A=a*Omega/c_s=0.55)</em>
+  (parameters: <code>nu=0.20</code>, <code>e=0.45</code>,
+  <code>n0=0</code>, <code>A=a*Omega/c_s=0.55</code>)
 </p>
 
 ## Contents
@@ -136,6 +137,7 @@ These scripts intentionally use moderate grids by default.  Increase
 
 ## References
 
-- G. Eytan, V. Desjacques, and Y. B. Ginat, arXiv:2509.15632.  We only
+- G. Eytan, V. Desjacques, and Y. B. Ginat,
+  [arXiv:2509.15632](https://arxiv.org/abs/2509.15632).  We only
   implement the single-perturber version in
   `eytan_sound_wave_coefficients.py`.
