@@ -1,7 +1,7 @@
 # Binary Fluid Sound-Wave Flux Calculators
 
 Numerical calculators for sound-wave fluxes from eccentric binary orbits in
-classical and quantum fluids.
+homogeneous classical-fluid and quantum-fluid backgrounds.
 
 The code evaluates the harmonic sums with automatic convergence checks and can
 use CUDA acceleration through `numba.cuda` when available.  CPU execution is
@@ -12,7 +12,7 @@ also supported.
 </p>
 <p align="center">
   (parameters: <code>nu=0.20</code>, <code>e=0.45</code>,
-  <code>n0=0</code>, <code>A=a*Omega/c_s=0.55</code>)
+  <code>n0=0</code>, <code>A=a*Omega=0.55</code>)
 </p>
 
 ## Contents
@@ -20,7 +20,7 @@ also supported.
 - `classic_fluid_power.py`: classical-fluid normalized power
   `P/(2*rho_bar*M^2/c_s)`.
 - `classic_fluid_tau_z.py`: classical-fluid normalized angular-momentum flux
-  `tau_z*Omega/(2*rho_bar*M^2/c_s)`.
+  `tau_z*tildeOmega/(2*rho_bar*M^2/c_s)`.
 - `classic_fluid_force_y.py`: classical-fluid normalized y-force
   `F_y/(2*rho_bar*M^2/c_s^2)`.
 - `quantum_fluid.py`: quantum-fluid normalized `P`, `tau_z`, and `F_y`.
@@ -37,7 +37,20 @@ also supported.
 
 ## Parameters
 
-The symmetric mass ratio is
+The calculators use dimensionless parameters built from the auxiliary-time
+wave equation.  The main symbols are:
+
+```text
+rho_bar     homogeneous background mass density
+tildeOmega  physical orbital angular frequency, T = 2*pi/tildeOmega
+Omega       orbital frequency in the auxiliary time
+m           effective Jeans/tachyonic mass in the auxiliary-time equation
+n0          m/Omega
+c_s         classical-fluid sound speed
+m_phi       scalar-particle mass in the quantum-fluid case
+```
+
+The total binary mass is `M = m1 + m2`, and the symmetric mass ratio is
 
 ```text
 nu = m1*m2/(m1+m2)^2,    0 < nu <= 1/4.
@@ -47,21 +60,62 @@ The Keplerian orbit uses eccentricity `e` and eccentric anomaly `xi`,
 
 ```text
 X/a = (cos xi - e, sqrt(1-e^2) sin xi, 0),
-Omega*t = xi - e*sin xi.
+tildeOmega*t_phys = xi - e*sin xi.
 ```
 
-Classical-fluid calculators use
+For the classical Newtonian fluid, the code parameter is
 
 ```text
-A = a*Omega/c_s,
-n0 = m/Omega.
+A = a*Omega.
 ```
 
-Quantum-fluid calculators use
+The relation to physical parameters is
 
 ```text
-A = M_Q = a*sqrt(Omega),
-n0 = m/Omega.
+t_aux = c_s*t_phys,
+Omega = tildeOmega/c_s,
+m^2 = 4*pi*rho_bar/c_s^2,
+n0 = m/Omega = sqrt(4*pi*rho_bar)/tildeOmega,
+rho_bar = (n0*tildeOmega)^2/(4*pi) = c_s^2*m^2/(4*pi).
+```
+
+For `n > 0`, the classical radiating wavenumber is
+
+```text
+k_n = Omega*sqrt(n^2+n0^2),
+a*k_n = A*sqrt(n^2+n0^2).
+```
+
+For the quantum-fluid, or Schrodinger-Poisson, case,
+
+```text
+A = M_Q = a*sqrt(Omega).
+```
+
+The relation to physical parameters is
+
+```text
+t_aux = t_phys/(2*m_phi),
+Omega = 2*m_phi*tildeOmega,
+m^2 = 16*pi*m_phi^2*rho_bar,
+n0 = m/Omega = sqrt(4*pi*rho_bar)/tildeOmega,
+rho_bar = (n0*tildeOmega)^2/(4*pi) = m^2/(16*pi*m_phi^2).
+```
+
+For `n > 0`, the quantum radiating wavenumber is
+
+```text
+k_n = sqrt(Omega)*(n^2+n0^2)^(1/4),
+a*k_n = A*(n^2+n0^2)^(1/4).
+```
+
+The returned values are dimensionless normalized fluxes.  For a homogeneous
+background density `rho_bar`, the classical-fluid outputs correspond to
+
+```text
+P     = (2*rho_bar*M^2/c_s) * P_hat,
+tau_z = (2*rho_bar*M^2/c_s) * tau_hat/tildeOmega,
+F_y   = (2*rho_bar*M^2/c_s^2) * Fy_hat.
 ```
 
 For the quantum-fluid outputs,
@@ -70,6 +124,20 @@ For the quantum-fluid outputs,
 P_hat   = P/(2*rho_bar*M^2*m_phi/sqrt(Omega)),
 tau_hat = tau_z*tildeOmega/(2*rho_bar*M^2*m_phi/sqrt(Omega)),
 Fy_hat  = F_y*sqrt(Omega)/m_phi/(2*rho_bar*M^2*m_phi/sqrt(Omega)).
+```
+
+Equivalently,
+
+```text
+P     = (2*rho_bar*M^2*m_phi/sqrt(Omega)) * P_hat,
+tau_z = (2*rho_bar*M^2*m_phi/sqrt(Omega)) * tau_hat/tildeOmega,
+F_y   = (2*rho_bar*M^2*m_phi^2/Omega) * Fy_hat.
+```
+
+Thus the same dimensionless `n0` is used in both media:
+
+```text
+n0 = sqrt(4*pi*rho_bar)/tildeOmega.
 ```
 
 ## Installation
@@ -134,6 +202,7 @@ These scripts intentionally use moderate grids by default.  Increase
 - Classical-fluid point-source calculations have a built-in large-harmonic
   speed-threshold guard.
 - Please verify convergence settings for each new parameter regime.
+- The quantum fluid is classical.
 
 ## References
 
