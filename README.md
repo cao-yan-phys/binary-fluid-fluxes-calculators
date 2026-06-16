@@ -20,7 +20,7 @@ also supported.
   classical and quantum fluids.
 - `single_perturber_classic.py`: fixed-center single-perturber classical limit.
 - `eytan_sound_wave_coefficients.py`: finite-cutoff
-  Eytan--Desjacques--Ginat single-perturber harmonic coefficients.
+  Eytan--Desjacques--Ginat single-perturber coefficient calculator.
 - `classic_fluid_quadrupole.py`: closed-form massless classical quadrupole
   formulas.
 - `FORMULAS.md`: formula transcription and normalization notes.
@@ -129,6 +129,6 @@ These scripts intentionally use moderate grids by default.  Increase
 
 ## References
 
-- G. Eytan, V. Desjacques, and Y. B. Ginat, arXiv:2509.15632, for the
-  finite-cutoff single-perturber harmonic-coefficient comparison implemented in
+- G. Eytan, V. Desjacques, and Y. B. Ginat, arXiv:2509.15632.  We only
+  implement the single-perturber version in
   `eytan_sound_wave_coefficients.py`.

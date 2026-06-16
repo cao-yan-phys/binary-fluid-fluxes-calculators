@@ -1,4 +1,4 @@
-"""Finite-cutoff Eytan--Desjacques--Ginat single-perturber coefficients.
+"""Finite-cutoff Eytan--Desjacques--Ginat single-perturber coefficient calculator.
 
 This module implements the eccentric single-perturber harmonic coefficients
 
@@ -135,8 +135,8 @@ def eytan_sound_wave_coefficients(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Compute finite-cutoff Eytan--Desjacques--Ginat "
-            "single-perturber sound-wave coefficients."
+            "Run the finite-cutoff Eytan--Desjacques--Ginat "
+            "single-perturber coefficient calculator."
         )
     )
     parser.add_argument("--Mach", type=float, required=True)
