@@ -7,11 +7,12 @@ The code evaluates the harmonic sums with automatic convergence checks and can
 use CUDA acceleration through `numba.cuda` when available.  CPU execution is
 also supported.
 
-![Angular distribution of sound-wave energy flux](docs/assets/binary_cm_orbit_angular_power.png)
-
-Figure: angular distribution of the classical-fluid sound-wave energy flux on
-a sphere enclosing the center-of-mass binary orbit, for
-`nu=0.20`, `e=0.45`, `n0=0`, `A=a*Omega/c_s=0.55`, and `xi=2.15`.
+<p align="center">
+  <img src="docs/assets/binary_cm_orbit_angular_power.png" alt="Angular distribution of sound-wave energy flux" width="760">
+</p>
+<p align="center">
+  <em>(parameters: nu=0.20, e=0.45, n0=0, A=a*Omega/c_s=0.55)</em>
+</p>
 
 ## Contents
 
