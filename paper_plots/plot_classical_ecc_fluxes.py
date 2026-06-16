@@ -1,7 +1,7 @@
-"""Draft paper Fig. 2: classical fluxes for several eccentricities.
+"""Classical-fluid eccentricity-scan flux plot.
 
-The figure follows the visual format of Fig. 1: three panels for normalized
-P, tau_z, and -F_y versus Mach number.  The line color labels eccentricity.
+The figure has three panels for normalized P, tau_z, and -F_y versus Mach
+number.  The line color labels eccentricity.
 Solid lines are n0=0 and dashed lines are n0=1.
 
 The point-source UV threshold is
@@ -42,13 +42,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("outputs/paper_fig2_equal_mass_ecc_fluxes"),
+        default=Path("outputs/classical_ecc_fluxes"),
     )
-    parser.add_argument("--figure-stem", type=str, default="paper_fig2_equal_mass_ecc_fluxes")
+    parser.add_argument("--figure-stem", type=str, default="classical_ecc_fluxes")
     parser.add_argument(
         "--report-title",
         type=str,
-        default="Draft Paper Fig. 2: Equal-Mass Eccentricity Scan",
+        default="Classical-Fluid Eccentricity Scan",
     )
     parser.add_argument("--backend", choices=("auto", "cuda", "cpu"), default="cuda")
     parser.add_argument("--eccentricities", type=float, nargs="+", default=[0.0, 0.2, 0.4, 0.8])

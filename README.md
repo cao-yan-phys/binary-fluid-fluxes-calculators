@@ -111,7 +111,8 @@ The scripts in `paper_plots/` write outputs below an `outputs/` directory.
 For example:
 
 ```powershell
-python paper_plots/plot_paper_fig3_nu02_ecc_fluxes.py
+python paper_plots/plot_paper_fig3_classical_nu02_ecc_fluxes.py
+python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
 ```
 
 These scripts intentionally use moderate grids by default.  Increase
