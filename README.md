@@ -1,7 +1,7 @@
-# Binary Fluid Dynamical-Friction Calculators
+# Binary Fluid Sound-Wave Flux Calculators
 
-Numerical calculators for radiation/dynamical-friction fluxes from eccentric
-binary orbits in classical and quantum fluids.
+Numerical calculators for sound-wave fluxes from eccentric binary orbits in
+classical and quantum fluids.
 
 The code evaluates the harmonic sums with automatic convergence checks and can
 use CUDA acceleration through `numba.cuda` when available.  CPU execution is
@@ -120,5 +120,4 @@ These scripts intentionally use moderate grids by default.  Increase
 - Classical-fluid point-source calculations have a built-in large-harmonic
   speed-threshold guard.  Quantum-fluid calculations do not use the classical
   sonic critical Mach condition.
-- The code is research software; verify convergence settings for each new
-  parameter regime.
+- Please verify convergence settings for each new parameter regime.
