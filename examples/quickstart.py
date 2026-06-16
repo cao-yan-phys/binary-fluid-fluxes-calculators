@@ -12,6 +12,7 @@ if str(REPO_ROOT) not in sys.path:
 from classic_fluid_force_y import classical_fluid_force_y
 from classic_fluid_power import classical_fluid_power
 from classic_fluid_tau_z import classical_fluid_tau_z
+from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients
 from quadrupole_fluxes import quantum_quadrupole_flux_normalized
 from quantum_fluid import quantum_fluid_force_y, quantum_fluid_power, quantum_fluid_tau_z
 
@@ -55,6 +56,13 @@ def main() -> None:
         n_max=256,
         strict_convergence=False,
     )
+    eytan = eytan_sound_wave_coefficients(
+        Mach=0.5,
+        e=0.2,
+        jmax=8,
+        lmax=8,
+        n_xi=2048,
+    )
 
     print("Classical normalized fluxes")
     print(f"  P_hat       = {p_classic.value:.8e}")
@@ -71,6 +79,10 @@ def main() -> None:
     print("\nQuantum quadrupole approximation")
     print(f"  P_hat       = {quad_quantum.P:.8e}")
     print(f"  tau_hat     = {quad_quantum.tau_z_tildeOmega:.8e}")
+
+    print("\nEytan single-perturber coefficient check")
+    print(f"  IE/Mach     = {eytan.P_shape:.8e}")
+    print(f"  IL/Mach^2   = {eytan.tau_z_shape:.8e}")
 
 
 if __name__ == "__main__":

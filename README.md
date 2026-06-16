@@ -19,6 +19,8 @@ also supported.
 - `quadrupole_fluxes.py`: general quadrupole-approximation fluxes for
   classical and quantum fluids.
 - `single_perturber_classic.py`: fixed-center single-perturber classical limit.
+- `eytan_sound_wave_coefficients.py`: finite-cutoff
+  Eytan--Desjacques--Ginat single-perturber harmonic coefficients.
 - `classic_fluid_quadrupole.py`: closed-form massless classical quadrupole
   formulas.
 - `FORMULAS.md`: formula transcription and normalization notes.
@@ -84,19 +86,23 @@ Direct CLI example:
 ```powershell
 python classic_fluid_power.py --nu 0.25 --e 0.2 --n0 0 --A 0.5 --backend auto
 python quantum_fluid.py --quantity power --nu 0.25 --e 0.2 --n0 0 --A 2.0 --backend auto
+python eytan_sound_wave_coefficients.py --Mach 0.5 --e 0.2 --jmax 20 --lmax 13
 ```
 
 Minimal Python example:
 
 ```python
 from classic_fluid_power import classical_fluid_power
+from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients
 from quantum_fluid import quantum_fluid_power
 
 classic = classical_fluid_power(nu=0.25, e=0.2, n0=0.0, A=0.5, backend="auto")
 quantum = quantum_fluid_power(nu=0.25, e=0.2, n0=0.0, A=2.0, backend="auto")
+eytan = eytan_sound_wave_coefficients(Mach=0.5, e=0.2, jmax=20, lmax=13)
 
 print(classic.value)
 print(quantum.value)
+print(eytan.P_shape)
 ```
 
 ## Paper-Style Plots
@@ -118,6 +124,11 @@ These scripts intentionally use moderate grids by default.  Increase
   The calculators evaluate chunks of harmonics until recent tail contributions
   are below the requested tolerance for several consecutive checks.
 - Classical-fluid point-source calculations have a built-in large-harmonic
-  speed-threshold guard.  Quantum-fluid calculations do not use the classical
-  sonic critical Mach condition.
+  speed-threshold guard.
 - Please verify convergence settings for each new parameter regime.
+
+## References
+
+- G. Eytan, V. Desjacques, and Y. B. Ginat, arXiv:2509.15632, for the
+  finite-cutoff single-perturber harmonic-coefficient comparison implemented in
+  `eytan_sound_wave_coefficients.py`.
