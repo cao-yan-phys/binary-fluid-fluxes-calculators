@@ -44,6 +44,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("outputs/paper_fig2_equal_mass_ecc_fluxes"),
     )
+    parser.add_argument("--figure-stem", type=str, default="paper_fig2_equal_mass_ecc_fluxes")
+    parser.add_argument(
+        "--report-title",
+        type=str,
+        default="Draft Paper Fig. 2: Equal-Mass Eccentricity Scan",
+    )
     parser.add_argument("--backend", choices=("auto", "cuda", "cpu"), default="cuda")
     parser.add_argument("--eccentricities", type=float, nargs="+", default=[0.0, 0.2, 0.4, 0.8])
     parser.add_argument("--nu", type=float, default=0.25)
@@ -236,7 +242,7 @@ def save_plot(df: pd.DataFrame, args: argparse.Namespace, output_dir: Path) -> N
     fig.tight_layout()
     for ext in ("png", "pdf"):
         fig.savefig(
-            output_dir / f"paper_fig2_equal_mass_ecc_fluxes.{ext}",
+            output_dir / f"{args.figure_stem}.{ext}",
             dpi=220,
             bbox_inches="tight",
         )
@@ -249,7 +255,7 @@ def main() -> None:
 
     df = compute_rows(args)
     mono = monotonic_summary(df)
-    data_path = args.output_dir / "paper_fig2_equal_mass_ecc_fluxes_data.csv"
+    data_path = args.output_dir / f"{args.figure_stem}_data.csv"
     mono_path = args.output_dir / "n0_monotonic_check.csv"
     df.to_csv(data_path, index=False)
     mono.to_csv(mono_path, index=False)
@@ -285,12 +291,12 @@ def main() -> None:
     }
     (args.output_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     report = [
-        "# Draft Paper Fig. 2: Equal-Mass Eccentricity Scan",
+        f"# {args.report_title}",
         "",
         "Files:",
         "",
-        "- `paper_fig2_equal_mass_ecc_fluxes.png/pdf`",
-        "- `paper_fig2_equal_mass_ecc_fluxes_data.csv`",
+        f"- `{args.figure_stem}.png/pdf`",
+        f"- `{args.figure_stem}_data.csv`",
         "- `n0_monotonic_check.csv`",
         "- `summary.json`",
         "",
@@ -302,7 +308,7 @@ def main() -> None:
     ]
     (args.output_dir / "REPORT.md").write_text("\n".join(report) + "\n", encoding="utf-8")
 
-    print(f"figure = {args.output_dir / 'paper_fig2_equal_mass_ecc_fluxes.png'}")
+    print(f"figure = {args.output_dir / f'{args.figure_stem}.png'}")
     print(f"data = {data_path}")
     print(f"monotonic_check = {mono_path}")
     print(json.dumps(summary, indent=2))
