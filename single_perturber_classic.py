@@ -1,8 +1,13 @@
-"""Classical-fluid calculators for one eccentric Keplerian perturber.
+"""Classical-fluid direct-sum calculators for one eccentric Keplerian perturber.
 
-This module implements the single-source/test-perturber limit used for the
-Eytan-Desjacques-Ginat Fig. 4/5 comparison.  It shares the same quadrature and
-CUDA strategy as the binary calculators, but uses
+This module computes the fixed-center, single-perturber limit with the same
+direct harmonic-sum method used by our binary calculators.  It is not an
+implementation of the Eytan--Desjacques--Ginat coefficient expansion; that
+finite-cutoff formula is implemented separately in
+``eytan_sound_wave_coefficients.py``.  The purpose of this module is to provide
+our direct-integration result for comparison with that EDG formula.
+
+The single-source calculation uses
 
     K_n = int dM/(2*pi) exp(i n M) exp(i a k_n n_hat . X)
 
@@ -15,6 +20,47 @@ Returned normalizations:
 
     tau_z:
         tau_z * tilde_Omega / (2 rho_bar m_p**2 / c_s)
+
+Example comparison at the same parameter point:
+
+    from math import pi
+    from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients
+    from single_perturber_classic import (
+        single_perturber_power,
+        single_perturber_tau_z,
+    )
+
+    common = dict(
+        e=0.2,
+        n0=0.0,
+        A=0.5,
+        n_max=256,
+        n_mu=24,
+        n_phi=48,
+        backend="cpu",
+        chunk_size=64,
+        rtol=1.0e-6,
+        tail_window=16,
+        consecutive_windows=2,
+        strict_convergence=False,
+        xi_per_n=4,
+    )
+    p = single_perturber_power(**common)
+    tau = single_perturber_tau_z(**common)
+    edg = eytan_sound_wave_coefficients(
+        Mach=0.5,
+        e=0.2,
+        jmax=20,
+        lmax=13,
+        n_xi=4096,
+    )
+
+    print(p.value / (2.0*pi), edg.P_shape)
+    print(tau.value / pi, edg.tau_z_shape)
+
+With these conventions the two printed pairs should be close.  The factors
+``2*pi`` and ``pi`` convert between this module's direct flux normalizations
+and the shape normalizations returned by ``eytan_sound_wave_coefficients.py``.
 """
 
 from __future__ import annotations
