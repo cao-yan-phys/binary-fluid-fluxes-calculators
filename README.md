@@ -1,44 +1,29 @@
 # Binary Fluid Sound-Wave Flux Calculators
 
-Numerical calculators for sound-wave fluxes from eccentric **Keplerian** binary orbits in
-homogeneous **Newtonian** classical-fluid and quantum-fluid backgrounds.
+Numerical calculators for sound-wave fluxes from eccentric **Keplerian** binary orbits in homogeneous **Newtonian** classical-fluid and quantum-fluid backgrounds.
 
-The code evaluates the harmonic sums with automatic convergence checks and can
-use CUDA acceleration through `numba.cuda` when available.  CPU execution is
-also supported.
+The code evaluates the harmonic sums with automatic convergence checks and can use CUDA acceleration through `numba.cuda` when available. CPU execution is also supported.
 
-<p align="center">
-  <img src="docs/assets/binary_cm_orbit_angular_power.png" alt="Angular distribution of sound-wave energy flux" width="760">
-</p>
-<p align="center">
-  (parameters: <code>nu=0.20</code>, <code>e=0.45</code>,
-  <code>n0=0</code>, <code>A=a*Omega=0.55</code>)
-</p>
+<p align="center"><img src="docs/assets/binary_cm_orbit_angular_power.png" alt="Angular distribution of sound-wave energy flux" width="760"></p>
+<p align="center">(parameters: <code>nu=0.20</code>, <code>e=0.45</code>, <code>n0=0</code>, <code>A=a*Omega=0.55</code>)</p>
 
 ## Contents
 
-- `classic_fluid_power.py`: classical-fluid normalized power
-  `P/(2*rho_bar*M^2/c_s)`.
-- `classic_fluid_tau_z.py`: classical-fluid normalized angular-momentum flux
-  `tau_z*tildeOmega/(2*rho_bar*M^2/c_s)`.
-- `classic_fluid_force_y.py`: classical-fluid normalized y-force
-  `F_y/(2*rho_bar*M^2/c_s^2)`.
+- `classic_fluid_power.py`: classical-fluid normalized power `P/(2*rho_bar*M^2/c_s)`.
+- `classic_fluid_tau_z.py`: classical-fluid normalized angular-momentum flux `tau_z*tildeOmega/(2*rho_bar*M^2/c_s)`.
+- `classic_fluid_force_y.py`: classical-fluid normalized y-force `F_y/(2*rho_bar*M^2/c_s^2)`.
 - `quantum_fluid.py`: quantum-fluid normalized `P`, `tau_z`, and `F_y`.
-- `quadrupole_fluxes.py`: general quadrupole-approximation fluxes for
-  classical and quantum fluids.
+- `quadrupole_fluxes.py`: general quadrupole-approximation fluxes for classical and quantum fluids.
 - `single_perturber_classic.py`: fixed-center single-perturber classical limit.
-- `eytan_sound_wave_coefficients.py`: finite-cutoff
-  Eytan--Desjacques--Ginat single-perturber coefficient calculator.
-- `classic_fluid_quadrupole.py`: closed-form massless classical quadrupole
-  formulas.
+- `eytan_sound_wave_coefficients.py`: finite-cutoff Eytan--Desjacques--Ginat single-perturber coefficient calculator.
+- `classic_fluid_quadrupole.py`: closed-form massless classical quadrupole formulas.
 - `FORMULAS.md`: formula transcription and normalization notes.
 - `examples/quickstart.py`: small smoke-test style usage example.
 - `paper_plots/`: scripts used to generate representative paper-style figures.
 
 ## Parameters
 
-The calculators use dimensionless parameters built from the auxiliary-time
-wave equation.  The main symbols are:
+The calculators use dimensionless parameters built from the auxiliary-time wave equation. The main symbols are:
 
 ```text
 rho_bar     homogeneous background mass density
@@ -109,8 +94,7 @@ k_n = sqrt(Omega)*(n^2+n0^2)^(1/4),
 a*k_n = A*(n^2+n0^2)^(1/4).
 ```
 
-The returned values are dimensionless normalized fluxes.  For a homogeneous
-background density `rho_bar`, the classical-fluid outputs correspond to
+The returned values are dimensionless normalized fluxes. For a homogeneous background density `rho_bar`, the classical-fluid outputs correspond to
 
 ```text
 P     = (2*rho_bar*M^2/c_s) * P_hat,
@@ -148,8 +132,7 @@ Create a Python environment and install the runtime dependencies:
 pip install -r requirements.txt
 ```
 
-CUDA acceleration requires a working NVIDIA CUDA setup supported by Numba.
-If CUDA is unavailable, use `backend="cpu"` or `backend="auto"`.
+CUDA acceleration requires a working NVIDIA CUDA setup supported by Numba. If CUDA is unavailable, use `backend="cpu"` or `backend="auto"`.
 
 ## Quick Start
 
@@ -183,30 +166,22 @@ print(eytan.P_shape)
 
 ## Paper-Style Plots
 
-The scripts in `paper_plots/` write outputs below an `outputs/` directory.
-For example:
+The scripts in `paper_plots/` write outputs below an `outputs/` directory. For example:
 
 ```powershell
 python paper_plots/plot_paper_fig3_classical_nu02_ecc_fluxes.py
 python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
 ```
 
-These scripts intentionally use moderate grids by default.  Increase
-`--n-max`, `--n-mu`, `--n-phi`, or decrease `--rtol` for production runs.
+These scripts intentionally use moderate grids by default. Increase `--n-max`, `--n-mu`, `--n-phi`, or decrease `--rtol` for production runs.
 
 ## Notes
 
-- The infinite harmonic sum is not returned at an arbitrary cutoff by default.
-  The calculators evaluate chunks of harmonics until recent tail contributions
-  are below the requested tolerance for several consecutive checks.
-- Classical-fluid point-source calculations have a built-in large-harmonic
-  speed-threshold guard.
+- The infinite harmonic sum is not returned at an arbitrary cutoff by default. The calculators evaluate chunks of harmonics until recent tail contributions are below the requested tolerance for several consecutive checks.
+- Classical-fluid point-source calculations have a built-in large-harmonic speed-threshold guard.
 - Please verify convergence settings for each new parameter regime.
 - The quantum fluid is classical.
 
 ## References
 
-- G. Eytan, V. Desjacques, and Y. B. Ginat,
-  [arXiv:2509.15632](https://arxiv.org/abs/2509.15632).  We only
-  implement the single-perturber version in
-  `eytan_sound_wave_coefficients.py`.
+- G. Eytan, V. Desjacques, and Y. B. Ginat, [arXiv:2509.15632](https://arxiv.org/abs/2509.15632). We only implement the single-perturber version in `eytan_sound_wave_coefficients.py`.
