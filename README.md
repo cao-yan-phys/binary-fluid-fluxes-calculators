@@ -1,6 +1,6 @@
 # Binary Fluid Sound-Wave Flux Calculators
 
-Numerical calculators for sound-wave fluxes from bound Keplerian binaries in homogeneous Newtonian classical barotropic-fluid and Schrödinger--Poisson quantum-fluid backgrounds.
+Numerical calculators for sound-wave fluxes from bound Keplerian binaries in homogeneous Newtonian classical barotropic-fluid and Schrödinger-Poisson quantum-fluid backgrounds.
 
 The code evaluates the harmonic sums with automatic convergence checks and can use CUDA acceleration through `numba.cuda` when available. CPU execution is also supported.
 
@@ -48,7 +48,7 @@ X/a = (cos xi - e, sqrt(1-e^2) sin xi, 0),
 tildeOmega*t_phys = xi - e*sin xi.
 ```
 
-For the classical Newtonian fluid, the code parameter is
+For the classical Newtonian fluid, the code parameter is the Mach number ($\mathcal{M}=a\Omega$):
 
 ```text
 A = a*Omega.
@@ -71,10 +71,10 @@ k_n = Omega*sqrt(n^2+n0^2),
 a*k_n = A*sqrt(n^2+n0^2).
 ```
 
-For the quantum-fluid, or Schrodinger-Poisson, case,
+For the Schrödinger-Poisson quantum-fluid, the code parameter is the number ($\mathcal{M}_Q=a\sqrt{\Omega}$):
 
 ```text
-A = M_Q = a*sqrt(Omega).
+A = a*sqrt(Omega).
 ```
 
 The relation to physical parameters is
