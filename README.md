@@ -1,6 +1,6 @@
 # Binary Fluid Sound-Wave Flux Calculators
 
-Numerical calculators for sound-wave fluxes from eccentric **Keplerian** binary orbits in homogeneous **Newtonian** classical-fluid and quantum-fluid backgrounds.
+Numerical calculators for sound-wave fluxes from bound Keplerian binaries in homogeneous Newtonian classical barotropic-fluid and Schrödinger--Poisson quantum-fluid backgrounds.
 
 The code evaluates the harmonic sums with automatic convergence checks and can use CUDA acceleration through `numba.cuda` when available. CPU execution is also supported.
 
