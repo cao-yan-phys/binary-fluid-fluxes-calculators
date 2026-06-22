@@ -87,7 +87,7 @@ n0 = m/Omega = sqrt(4*pi*rho_bar)/tildeOmega,
 rho_bar = (n0*tildeOmega)^2/(4*pi) = m^2/(16*pi*m_phi^2).
 ```
 
-For `n > 0`, the quantum radiating wavenumber is
+For `n > 0`, the radiating wavenumber is
 
 ```text
 k_n = sqrt(Omega)*(n^2+n0^2)^(1/4),
