@@ -12,7 +12,7 @@ Here ``A = a*Omega/c_s`` for the fixed-center single perturber.  The returned
 perturber mass ``m_p``,
 
     P / (2*rho_bar*m_p**2/c_s) = 2*pi*P_shape,
-    tau_z*tildeOmega / (2*rho_bar*m_p**2/c_s) = pi*tau_z_shape.
+    tau_z*tildeOmega / (2*rho_bar*m_p**2/c_s) = 2*pi*A*tau_z_shape.
 
 The returned shape fields are defined as
 

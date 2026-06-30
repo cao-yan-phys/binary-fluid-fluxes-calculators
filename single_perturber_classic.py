@@ -59,10 +59,10 @@ Example comparison at the same parameter point:
     )
 
     print(p.value / (2.0*pi), edg.P_shape)
-    print(tau.value / pi, edg.tau_z_shape)
+    print(tau.value / (2.0*pi*common["A"]), edg.tau_z_shape)
 
 With these conventions the two printed pairs should be close.  The factors
-``2*pi`` and ``pi`` convert between this module's direct flux normalizations
+``2*pi`` and ``2*pi*A`` convert between this module's direct flux normalizations
 and the shape normalizations returned by ``eytan_sound_wave_coefficients.py``.
 """
 
