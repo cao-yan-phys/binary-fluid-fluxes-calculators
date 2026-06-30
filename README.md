@@ -145,8 +145,6 @@ P/(2*rho_bar*m_p^2/c_s) = 2*pi*P_shape,
 tau_z*tildeOmega/(2*rho_bar*m_p^2/c_s) = pi*tau_z_shape.
 ```
 
-The same `m_p` normalization is used here.
-
 ## Installation
 
 Create a Python environment and install the runtime dependencies:
