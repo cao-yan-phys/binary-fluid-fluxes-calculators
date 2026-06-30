@@ -12,6 +12,7 @@ The single-source calculation uses
     K_n = int dM/(2*pi) exp(i n M) exp(i a k_n n_hat . X)
 
 directly, with `M = xi - e sin(xi)` and `X/a` equal to the eccentric orbit.
+The input `A` is the single-perturber Mach number, `A = a*Omega/c_s`.
 
 Returned normalizations:
 
@@ -20,6 +21,8 @@ Returned normalizations:
 
     tau_z:
         tau_z * tilde_Omega / (2 rho_bar m_p**2 / c_s)
+
+Here `m_p` is the mass of the fixed-center perturber.
 
 Example comparison at the same parameter point:
 
@@ -48,7 +51,7 @@ Example comparison at the same parameter point:
     p = single_perturber_power(**common)
     tau = single_perturber_tau_z(**common)
     edg = eytan_sound_wave_coefficients(
-        Mach=0.5,
+        A=0.5,
         e=0.2,
         jmax=20,
         lmax=13,

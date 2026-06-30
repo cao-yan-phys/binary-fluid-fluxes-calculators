@@ -57,7 +57,7 @@ def main() -> None:
         strict_convergence=False,
     )
     eytan = eytan_sound_wave_coefficients(
-        Mach=0.5,
+        A=0.5,
         e=0.2,
         jmax=8,
         lmax=8,
@@ -81,8 +81,8 @@ def main() -> None:
     print(f"  tau_hat     = {quad_quantum.tau_z_tildeOmega:.8e}")
 
     print("\nEytan single-perturber coefficient check")
-    print(f"  IE/Mach     = {eytan.P_shape:.8e}")
-    print(f"  IL/Mach^2   = {eytan.tau_z_shape:.8e}")
+    print(f"  IE/A        = {eytan.P_shape:.8e}")
+    print(f"  IL/A^2      = {eytan.tau_z_shape:.8e}")
 
 
 if __name__ == "__main__":

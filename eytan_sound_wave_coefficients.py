@@ -2,15 +2,22 @@
 
 This module implements the eccentric single-perturber harmonic coefficients
 
-    I_E = Mach * sum_{j != 0, l, m} c_lm |g_lm^(j)(j*Mach, e)|^2,
-    I_L = Mach * sum_{j != 0, l, m} (m/j) c_lm |g_lm^(j)(j*Mach, e)|^2,
+    I_E = A * sum_{j != 0, l, m} c_lm |g_lm^(j)(j*A, e)|^2,
+    I_L = A * sum_{j != 0, l, m} (m/j) c_lm |g_lm^(j)(j*A, e)|^2,
 
 with finite cutoffs ``jmax`` and ``lmax``.
 
-The rate shapes used for comparison with single-perturber simulations are
+Here ``A = a*Omega/c_s`` for the fixed-center single perturber.  The returned
+``P_shape`` and ``tau_z_shape`` are not the normalized fluxes themselves.  For
+perturber mass ``m_p``,
 
-    -Edot shape  proportional to I_E / Mach,
-    -Ldot shape  proportional to I_L / Mach^2,
+    P / (2*rho_bar*m_p**2/c_s) = 2*pi*P_shape,
+    tau_z*tildeOmega / (2*rho_bar*m_p**2/c_s) = pi*tau_z_shape.
+
+The returned shape fields are defined as
+
+    P_shape = edot_shape = I_E / A,
+    tau_z_shape = ldot_shape = I_L / A^2,
 
 for ``a = c_s = rho = m_p = 1``.
 """
@@ -33,16 +40,16 @@ class EytanSoundWaveResult:
     tau_z_shape: float
     edot_shape: float
     ldot_shape: float
-    Mach: float
+    A: float
     e: float
     jmax: int
     lmax: int
     n_xi: int
 
 
-def _validate_inputs(*, Mach: float, e: float, jmax: int, lmax: int, n_xi: int) -> None:
-    if Mach <= 0.0:
-        raise ValueError("Mach must be positive")
+def _validate_inputs(*, A: float, e: float, jmax: int, lmax: int, n_xi: int) -> None:
+    if A <= 0.0:
+        raise ValueError("A must be positive")
     if not (0.0 <= e < 1.0):
         raise ValueError("e must satisfy 0 <= e < 1")
     if jmax < 1:
@@ -79,7 +86,7 @@ def _orbit_arrays(e: float, n_xi: int) -> tuple[np.ndarray, ...]:
 
 def eytan_sound_wave_coefficients(
     *,
-    Mach: float,
+    A: float,
     e: float,
     jmax: int = 20,
     lmax: int = 13,
@@ -87,7 +94,7 @@ def eytan_sound_wave_coefficients(
 ) -> EytanSoundWaveResult:
     """Compute finite-cutoff ``I_E``, ``I_L``, and the corresponding rate shapes."""
 
-    _validate_inputs(Mach=Mach, e=e, jmax=jmax, lmax=lmax, n_xi=n_xi)
+    _validate_inputs(A=A, e=e, jmax=jmax, lmax=lmax, n_xi=n_xi)
     mean_anomaly, jacobian, radius_over_a, true_anomaly = _orbit_arrays(e, n_xi)
 
     ie_sum = 0.0
@@ -95,7 +102,7 @@ def eytan_sound_wave_coefficients(
     for j in range(-jmax, jmax + 1):
         if j == 0:
             continue
-        x = j * Mach
+        x = j * A
         x_abs = abs(x)
         exp_minus_ijM = np.exp(-1j * j * mean_anomaly)
         for ell in range(0, lmax + 1):
@@ -113,10 +120,10 @@ def eytan_sound_wave_coefficients(
                 ie_sum += weighted
                 il_sum += (m / j) * weighted
 
-    IE = float(Mach * ie_sum)
-    IL = float(Mach * il_sum)
-    P_shape = IE / Mach
-    tau_z_shape = IL / (Mach * Mach)
+    IE = float(A * ie_sum)
+    IL = float(A * il_sum)
+    P_shape = IE / A
+    tau_z_shape = IL / (A * A)
     return EytanSoundWaveResult(
         IE=IE,
         IL=IL,
@@ -124,7 +131,7 @@ def eytan_sound_wave_coefficients(
         tau_z_shape=tau_z_shape,
         edot_shape=P_shape,
         ldot_shape=tau_z_shape,
-        Mach=Mach,
+        A=A,
         e=e,
         jmax=int(jmax),
         lmax=int(lmax),
@@ -139,7 +146,7 @@ def parse_args() -> argparse.Namespace:
             "single-perturber coefficient calculator."
         )
     )
-    parser.add_argument("--Mach", type=float, required=True)
+    parser.add_argument("--A", type=float, required=True)
     parser.add_argument("--e", type=float, required=True)
     parser.add_argument("--jmax", type=int, default=20)
     parser.add_argument("--lmax", type=int, default=13)
@@ -150,7 +157,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     result = eytan_sound_wave_coefficients(
-        Mach=args.Mach,
+        A=args.A,
         e=args.e,
         jmax=args.jmax,
         lmax=args.lmax,
@@ -158,8 +165,8 @@ def main() -> None:
     )
     print(f"IE = {result.IE:.16e}")
     print(f"IL = {result.IL:.16e}")
-    print(f"edot_shape_IE_over_Mach = {result.edot_shape:.16e}")
-    print(f"ldot_shape_IL_over_Mach2 = {result.ldot_shape:.16e}")
+    print(f"edot_shape_IE_over_A = {result.edot_shape:.16e}")
+    print(f"ldot_shape_IL_over_A2 = {result.ldot_shape:.16e}")
 
 
 if __name__ == "__main__":

@@ -124,6 +124,29 @@ Thus the same dimensionless `n0` is used in both media:
 n0 = sqrt(4*pi*rho_bar)/tildeOmega.
 ```
 
+The direct fixed-center single-perturber calculator
+`single_perturber_classic.py` uses `A = a*Omega/c_s` for the perturber orbit and
+returns
+
+```text
+single_perturber_power().value = P/(2*rho_bar*m_p^2/c_s),
+single_perturber_tau_z().value = tau_z*tildeOmega/(2*rho_bar*m_p^2/c_s).
+```
+
+Here `m_p` is the perturber mass.
+
+The Eytan--Desjacques--Ginat helper `eytan_sound_wave_coefficients.py` is a
+fixed-center single-perturber coefficient calculator.  Its `A` argument is
+`a*Omega/c_s` for the single-perturber orbit.  The returned `P_shape` and
+`tau_z_shape` are converted to the single-perturber normalized fluxes by
+
+```text
+P/(2*rho_bar*m_p^2/c_s) = 2*pi*P_shape,
+tau_z*tildeOmega/(2*rho_bar*m_p^2/c_s) = pi*tau_z_shape.
+```
+
+The same `m_p` normalization is used here.
+
 ## Installation
 
 Create a Python environment and install the runtime dependencies:
@@ -145,7 +168,7 @@ Direct CLI example:
 ```powershell
 python classic_fluid_power.py --nu 0.25 --e 0.2 --n0 0 --A 0.5 --backend auto
 python quantum_fluid.py --quantity power --nu 0.25 --e 0.2 --n0 0 --A 2.0 --backend auto
-python eytan_sound_wave_coefficients.py --Mach 0.5 --e 0.2 --jmax 20 --lmax 13
+python eytan_sound_wave_coefficients.py --A 0.5 --e 0.2 --jmax 20 --lmax 13
 ```
 
 Minimal Python example:
@@ -157,7 +180,7 @@ from quantum_fluid import quantum_fluid_power
 
 classic = classical_fluid_power(nu=0.25, e=0.2, n0=0.0, A=0.5, backend="auto")
 quantum = quantum_fluid_power(nu=0.25, e=0.2, n0=0.0, A=2.0, backend="auto")
-eytan = eytan_sound_wave_coefficients(Mach=0.5, e=0.2, jmax=20, lmax=13)
+eytan = eytan_sound_wave_coefficients(A=0.5, e=0.2, jmax=20, lmax=13)
 
 print(classic.value)
 print(quantum.value)
