@@ -1,4 +1,4 @@
-"""Draft paper Fig. 3: quantum-fluid eccentricity scan at nu=0.2.
+"""Paper Fig. 3: quantum-fluid eccentricity scan at nu=0.2.
 
 This preset keeps the quantum eccentricity-scan visual grammar, but uses
 ``nu=0.2`` and linear y axes. Command-line arguments supplied by the user
@@ -21,7 +21,7 @@ PRESET_ARGS = [
     "--figure-stem",
     "paper_fig3_quantum_nu02_ecc_fluxes",
     "--report-title",
-    "Draft Paper Fig. 3: Quantum nu=0.2 Eccentricity Scan",
+    "Paper Fig. 3: Quantum nu=0.2 Eccentricity Scan",
 ]
 
 

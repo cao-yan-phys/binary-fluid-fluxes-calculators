@@ -263,12 +263,12 @@ def save_plot(
         linewidths=0.45,
         zorder=5,
     )
-    ax.set_xlabel(r"$\mathcal{M}$", fontsize=15)
-    ax.set_ylabel(r"$P/(2\bar\rho M^2/c_s)$", fontsize=15)
+    ax.set_xlabel(r"$\mathcal{M}$", fontsize=18)
+    ax.set_ylabel(r"$P/(2\bar\rho M^2/c_s)$", fontsize=18)
     if not args.linear_y:
         ax.set_yscale("log")
     ax.grid(True, which="both", alpha=0.25)
-    ax.tick_params(axis="both", which="major", labelsize=11)
+    ax.tick_params(axis="both", which="major", labelsize=14)
 
     color_handles = [
         mlines.Line2D([], [], color=color_for_nu[nu], lw=2.2, label=rf"$\nu={format_nu(nu)}$")
@@ -291,14 +291,14 @@ def save_plot(
             [],
             color="#0072B2",
             marker="o",
-            linestyle="-",
+            linestyle="None",
             markersize=5.8,
             label="fixed-center analytic",
         ),
     ]
-    legend1 = ax.legend(handles=color_handles, loc="upper left", fontsize=9)
+    legend1 = ax.legend(handles=color_handles, loc="upper left", fontsize=12)
     ax.add_artist(legend1)
-    ax.legend(handles=style_handles, loc="lower right", fontsize=8.5)
+    ax.legend(handles=style_handles, loc="lower right", fontsize=12)
 
     max_crit = max(circular_uv_mach_limit(nu) for nu in nu_values)
     ax.set_xlim(args.mach_min * 0.75, max_crit * 1.02)

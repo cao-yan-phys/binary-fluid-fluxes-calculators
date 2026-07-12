@@ -1,11 +1,20 @@
 """Calculators for the quantum-fluid normalized observables.
 
-The quantum-fluid formulas use
+The default quantum-fluid formulas use
 
     a k_n = A * (n**2 + n0**2)**(1/4),    A = a * sqrt(Omega),
 
 where `n0 = m/Omega`.  This differs from the classical-fluid convention
 `A = a*Omega`.
+
+For a finite quartic-interaction sound term, pass the signed parameter
+`cS2_over_Omega = c_S**2/Omega`.  The convenience parameter
+`cS_over_sqrtOmega = c_S/sqrt(Omega)` is also accepted for `c_S**2 >= 0`.
+Then
+
+    a k_n = A * kappa_n,
+    kappa_n**2 = (-S + sqrt(S**2 + 4*(n**2+n0**2))) / 2,
+    S = cS2_over_Omega.
 
 Returned normalizations:
 
@@ -75,6 +84,7 @@ def _validate_inputs(
     n_xi: int | None,
     n_mu: int,
     n_phi: int,
+    cS2_over_Omega: float,
 ) -> None:
     mass_fractions_from_nu(nu)
     if not (0.0 <= e < 1.0):
@@ -83,6 +93,8 @@ def _validate_inputs(
         raise ValueError("n0 must be non-negative")
     if A < 0.0:
         raise ValueError("A = a*sqrt(Omega) must be non-negative")
+    if not math.isfinite(cS2_over_Omega):
+        raise ValueError("cS2_over_Omega = c_S^2/Omega must be finite")
     if n_max < 1:
         raise ValueError("n_max must be at least 1")
     if n_xi is not None and n_xi < 8:
@@ -109,6 +121,7 @@ def _quantum_terms_cpu(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
+    cS2_over_Omega: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     power = np.zeros(n_values.size, dtype=np.float64)
     tau_z = np.zeros(n_values.size, dtype=np.float64)
@@ -120,10 +133,14 @@ def _quantum_terms_cpu(
     for i_n in prange(n_values.size):
         n_float = float(n_values[i_n])
         n2_plus_n02 = n_float * n_float + n0 * n0
-        ak = A * math.sqrt(math.sqrt(n2_plus_n02))
-        power_weight = n_float / (n2_plus_n02 ** 0.75)
-        tau_weight = 1.0 / (n2_plus_n02 ** 0.75)
-        force_weight = 2.0 / math.sqrt(n2_plus_n02)
+        d = math.sqrt(cS2_over_Omega * cS2_over_Omega + 4.0 * n2_plus_n02)
+        kappa2 = 0.5 * (d - cS2_over_Omega)
+        kappa = math.sqrt(kappa2)
+        ak = A * kappa
+        common_weight = 2.0 / (kappa * d)
+        power_weight = n_float * common_weight
+        tau_weight = common_weight
+        force_weight = 4.0 / d
 
         power_sum = 0.0
         tau_sum = 0.0
@@ -212,6 +229,7 @@ def _quantum_terms_cuda_kernel(
     sqrt_one_minus_e2,
     A,
     n0,
+    cS2_over_Omega,
     out_power,
     out_tau_z,
     out_force_y,
@@ -232,10 +250,14 @@ def _quantum_terms_cuda_kernel(
 
     n_float = float(n_values[i_n])
     n2_plus_n02 = n_float * n_float + n0 * n0
-    ak = A * math.sqrt(math.sqrt(n2_plus_n02))
-    power_weight = n_float / (n2_plus_n02 ** 0.75)
-    tau_weight = 1.0 / (n2_plus_n02 ** 0.75)
-    force_weight = 2.0 / math.sqrt(n2_plus_n02)
+    d = math.sqrt(cS2_over_Omega * cS2_over_Omega + 4.0 * n2_plus_n02)
+    kappa2 = 0.5 * (d - cS2_over_Omega)
+    kappa = math.sqrt(kappa2)
+    ak = A * kappa
+    common_weight = 2.0 / (kappa * d)
+    power_weight = n_float * common_weight
+    tau_weight = common_weight
+    force_weight = 4.0 / d
 
     mu_i = mu[i_mu]
     sin_theta_sq = 1.0 - mu_i * mu_i
@@ -305,6 +327,7 @@ def _compute_quantum_terms_cuda(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
+    cS2_over_Omega: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     mu, w_mu, cos_phi, sin_phi, cos_xi, sin_xi, xi_minus_e_sin_xi = quadrature
     d_n_values = cuda.to_device(n_values.astype(np.int32, copy=False))
@@ -338,6 +361,7 @@ def _compute_quantum_terms_cuda(
         sqrt_one_minus_e2,
         A,
         n0,
+        cS2_over_Omega,
         d_out_power,
         d_out_tau_z,
         d_out_force_y,
@@ -360,6 +384,7 @@ def _compute_quantum_terms_cpu(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
+    cS2_over_Omega: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return _quantum_terms_cpu(
         n_values.astype(np.int32, copy=False),
@@ -370,6 +395,7 @@ def _compute_quantum_terms_cpu(
         sqrt_one_minus_e2,
         A,
         n0,
+        cS2_over_Omega,
     )
 
 
@@ -388,6 +414,8 @@ def quantum_fluid_quantity(
     e: float,
     n0: float,
     A: float,
+    cS2_over_Omega: float | None = None,
+    cS_over_sqrtOmega: float = 0.0,
     n_max: int = DEFAULT_MAX_N,
     n_xi: int | None = None,
     n_mu: int = 32,
@@ -405,6 +433,14 @@ def quantum_fluid_quantity(
 
     if quantity not in QUANTITY_INDEX:
         raise ValueError("quantity must be 'power', 'tau_z', or 'force_y'")
+    if cS2_over_Omega is None:
+        if cS_over_sqrtOmega < 0.0:
+            raise ValueError("cS_over_sqrtOmega = c_S/sqrt(Omega) must be non-negative")
+        signed_cS2_over_Omega = cS_over_sqrtOmega * cS_over_sqrtOmega
+    else:
+        if cS_over_sqrtOmega != 0.0:
+            raise ValueError("pass either cS2_over_Omega or cS_over_sqrtOmega, not both")
+        signed_cS2_over_Omega = float(cS2_over_Omega)
     _validate_inputs(
         nu=nu,
         e=e,
@@ -414,6 +450,7 @@ def quantum_fluid_quantity(
         n_xi=n_xi,
         n_mu=n_mu,
         n_phi=n_phi,
+        cS2_over_Omega=signed_cS2_over_Omega,
     )
     if backend not in ("auto", "cuda", "cpu"):
         raise ValueError("backend must be 'auto', 'cuda', or 'cpu'")
@@ -474,6 +511,7 @@ def quantum_fluid_quantity(
             sqrt_one_minus_e2=sqrt_one_minus_e2,
             A=A,
             n0=n0,
+            cS2_over_Omega=signed_cS2_over_Omega,
         )
         terms = all_quantity_terms[quantity_index]
         all_n.append(n_values.copy())
@@ -533,6 +571,13 @@ def quantum_fluid_quantity(
             "n0": float(n0),
             "A": float(A),
             "A_definition": "A = a*sqrt(Omega)",
+            "cS2_over_Omega": float(signed_cS2_over_Omega),
+            "cS2_over_Omega_definition": "cS2_over_Omega = c_S^2/Omega, signed",
+            "cS_over_sqrtOmega": (
+                math.sqrt(signed_cS2_over_Omega)
+                if signed_cS2_over_Omega >= 0.0
+                else None
+            ),
             "n_max_safety": int(n_max),
             "n_max_evaluated": int(n_done[-1]),
             "n_xi": None if n_xi is None else int(n_xi),
@@ -591,6 +636,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--e", type=float, required=True, help="orbital eccentricity")
     parser.add_argument("--n0", type=float, required=True, help="n0 = m/Omega")
     parser.add_argument("--A", type=float, required=True, help="quantum A = a*sqrt(Omega)")
+    parser.add_argument(
+        "--cS-over-sqrtOmega",
+        "--C",
+        dest="cS_over_sqrtOmega",
+        type=float,
+        default=0.0,
+        help="C = c_S/sqrt(Omega); default 0",
+    )
+    parser.add_argument(
+        "--cS2-over-Omega",
+        "--S",
+        dest="cS2_over_Omega",
+        type=float,
+        default=None,
+        help="signed S = c_S^2/Omega; do not combine with --C",
+    )
     parser.add_argument("--n-max", type=int, default=DEFAULT_MAX_N)
     parser.add_argument("--n-xi", type=int, default=None)
     parser.add_argument("--n-mu", type=int, default=32)
@@ -619,6 +680,8 @@ def main() -> None:
         e=args.e,
         n0=args.n0,
         A=args.A,
+        cS2_over_Omega=args.cS2_over_Omega,
+        cS_over_sqrtOmega=args.cS_over_sqrtOmega,
         n_max=args.n_max,
         n_xi=args.n_xi,
         n_mu=args.n_mu,

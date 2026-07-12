@@ -8,3 +8,7 @@ outputs/
 *.egg-info/
 dist/
 build/
+FORMULAS.md
+docs/local_environment_notes.md
+paper_plots/plot_cm_binary_orbit_diagram.py
+paper_plots/plot_classical_alpha_orbital_plane.py

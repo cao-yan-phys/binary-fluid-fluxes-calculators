@@ -22,6 +22,9 @@ Returned normalizations:
     tau_z:
         tau_z * tilde_Omega / (2 rho_bar m_p**2 / c_s)
 
+    force_y:
+        F_y / (2 rho_bar m_p**2 / c_s**2)
+
 Here `m_p` is the mass of the fixed-center perturber.
 
 Example comparison at the same parameter point:
@@ -90,11 +93,12 @@ from classic_fluid_power import (
 
 
 Backend = Literal["auto", "cuda", "cpu"]
-Quantity = Literal["power", "tau_z"]
+Quantity = Literal["power", "tau_z", "force_y"]
 
 QUANTITY_INDEX = {
     "power": 0,
     "tau_z": 1,
+    "force_y": 2,
 }
 
 
@@ -145,9 +149,10 @@ def _single_terms_cpu(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     power = np.zeros(n_values.size, dtype=np.float64)
     tau_z = np.zeros(n_values.size, dtype=np.float64)
+    force_y = np.zeros(n_values.size, dtype=np.float64)
     n_phi = cos_phi.size
     n_xi = cos_xi.size
     phi_weight = TWO_PI / n_phi
@@ -159,6 +164,7 @@ def _single_terms_cpu(
         ak = A * n_float * dispersion
         power_sum = 0.0
         tau_sum = 0.0
+        force_sum = 0.0
 
         for i_mu in range(mu.size):
             mu_i = mu[i_mu]
@@ -171,6 +177,7 @@ def _single_terms_cpu(
             for i_phi in range(n_phi):
                 cp = cos_phi[i_phi]
                 sp = sin_phi[i_phi]
+                y_component = sin_theta * sp
                 k_re = 0.0
                 k_im = 0.0
                 dk_re = 0.0
@@ -207,11 +214,13 @@ def _single_terms_cpu(
                 angle_weight = mu_weight * phi_weight
                 power_sum += angle_weight * k_abs2
                 tau_sum += angle_weight * torque_density
+                force_sum += angle_weight * y_component * k_abs2
 
         power[i_n] = power_sum / dispersion
         tau_z[i_n] = tau_sum / (n_float * dispersion)
+        force_y[i_n] = force_sum
 
-    return power, tau_z
+    return power, tau_z, force_y
 
 
 @cuda.jit
@@ -230,6 +239,7 @@ def _single_terms_cuda_kernel(
     n0,
     out_power,
     out_tau_z,
+    out_force_y,
 ):
     idx = cuda.grid(1)
     n_mu = mu.size
@@ -257,6 +267,7 @@ def _single_terms_cuda_kernel(
     sin_theta = math.sqrt(sin_theta_sq)
     cp = cos_phi[i_phi]
     sp = sin_phi[i_phi]
+    y_component = sin_theta * sp
 
     k_re = 0.0
     k_im = 0.0
@@ -289,6 +300,7 @@ def _single_terms_cuda_kernel(
     angle_weight = w_mu[i_mu] * (TWO_PI / n_phi)
     cuda.atomic.add(out_power, i_n, angle_weight * k_abs2 / dispersion)
     cuda.atomic.add(out_tau_z, i_n, angle_weight * torque_density / (n_float * dispersion))
+    cuda.atomic.add(out_force_y, i_n, angle_weight * y_component * k_abs2)
 
 
 def _compute_single_terms_cuda(
@@ -299,7 +311,7 @@ def _compute_single_terms_cuda(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     mu, w_mu, cos_phi, sin_phi, cos_xi, sin_xi, xi_minus_e_sin_xi = quadrature
     d_n_values = cuda.to_device(n_values.astype(np.int32, copy=False))
     d_mu = cuda.to_device(mu)
@@ -312,6 +324,7 @@ def _compute_single_terms_cuda(
     zeros = np.zeros(n_values.size, dtype=np.float64)
     d_out_power = cuda.to_device(zeros)
     d_out_tau_z = cuda.to_device(zeros)
+    d_out_force_y = cuda.to_device(zeros)
 
     threads_per_block = 128
     total_threads = n_values.size * mu.size * cos_phi.size
@@ -331,9 +344,14 @@ def _compute_single_terms_cuda(
         n0,
         d_out_power,
         d_out_tau_z,
+        d_out_force_y,
     )
     cuda.synchronize()
-    return d_out_power.copy_to_host(), d_out_tau_z.copy_to_host()
+    return (
+        d_out_power.copy_to_host(),
+        d_out_tau_z.copy_to_host(),
+        d_out_force_y.copy_to_host(),
+    )
 
 
 def _compute_single_terms_cpu(
@@ -344,7 +362,7 @@ def _compute_single_terms_cpu(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return _single_terms_cpu(
         n_values.astype(np.int32, copy=False),
         *quadrature,
@@ -377,7 +395,7 @@ def single_perturber_quantity(
     """Compute one normalized single-perturber observable."""
 
     if quantity not in QUANTITY_INDEX:
-        raise ValueError("quantity must be 'power' or 'tau_z'")
+        raise ValueError("quantity must be 'power', 'tau_z', or 'force_y'")
     _validate_inputs(e=e, n0=n0, A=A, n_max=n_max, n_xi=n_xi, n_mu=n_mu, n_phi=n_phi)
     if backend not in ("auto", "cuda", "cpu"):
         raise ValueError("backend must be 'auto', 'cuda', or 'cpu'")
@@ -473,11 +491,12 @@ def single_perturber_quantity(
             f"tail_ratio={tail_ratio:.6e}, rtol={rtol:.6e}."
         )
 
-    normalization = (
-        "P/(2*rho_bar*m_p^2/c_s)"
-        if quantity == "power"
-        else "tau_z*tilde_Omega/(2*rho_bar*m_p^2/c_s)"
-    )
+    if quantity == "power":
+        normalization = "P/(2*rho_bar*m_p^2/c_s)"
+    elif quantity == "tau_z":
+        normalization = "tau_z*tilde_Omega/(2*rho_bar*m_p^2/c_s)"
+    else:
+        normalization = "F_y/(2*rho_bar*m_p^2/c_s^2)"
     return ClassicalFluidResult(
         value=float(np.sum(term_values)),
         n_values=n_done,
@@ -519,6 +538,10 @@ def single_perturber_power(**kwargs) -> ClassicalFluidResult:
 
 def single_perturber_tau_z(**kwargs) -> ClassicalFluidResult:
     return single_perturber_quantity("tau_z", **kwargs)
+
+
+def single_perturber_force_y(**kwargs) -> ClassicalFluidResult:
+    return single_perturber_quantity("force_y", **kwargs)
 
 
 def single_perturber_power_tau_z_terms(
@@ -577,7 +600,7 @@ def single_perturber_power_tau_z_terms(
             current_n_xi = recommended_n_xi(stop, xi_per_n=xi_per_n)
             quadrature = build_quadrature(current_n_xi, n_mu, n_phi, e)
         max_n_xi_evaluated = max(max_n_xi_evaluated, int(current_n_xi))
-        p_terms, t_terms = compute(
+        p_terms, t_terms, _ = compute(
             n_values,
             quadrature,
             e=e,
@@ -613,7 +636,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compute normalized single-perturber classical observables."
     )
-    parser.add_argument("--quantity", choices=("power", "tau_z"), required=True)
+    parser.add_argument("--quantity", choices=("power", "tau_z", "force_y"), required=True)
     parser.add_argument("--e", type=float, required=True)
     parser.add_argument("--n0", type=float, default=0.0)
     parser.add_argument("--A", type=float, required=True, help="A = a*tildeOmega/c_s")

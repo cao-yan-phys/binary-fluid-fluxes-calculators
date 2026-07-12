@@ -4,7 +4,7 @@ The returned value is
 
     tau_z * tilde_Omega / (2 * rho_bar * M**2 / c_s)
 
-using Eq. (2.51) from the formulas transcribed in FORMULAS.md:
+using the implemented normalized harmonic expression:
 
     Re sum_{n>=1} [(-i)/(n sqrt(1+(n0/n)^2))]
         int dOmega (-K_n partial_phi K_n^*).

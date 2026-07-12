@@ -1,6 +1,6 @@
 # Binary Fluid Sound-Wave Flux Calculators
 
-Numerical calculators for sound-wave fluxes from bound Keplerian binaries in homogeneous Newtonian classical barotropic-fluid and Schrödinger-Poisson quantum-fluid backgrounds.
+Numerical calculators for time-averaged sound-wave fluxes from bound Keplerian binaries in homogeneous Newtonian classical barotropic-fluid and Schrödinger-Poisson quantum-fluid backgrounds.
 
 The code evaluates the harmonic sums with automatic convergence checks and can use CUDA acceleration through `numba.cuda` when available. CPU execution is also supported.
 
@@ -17,7 +17,6 @@ The code evaluates the harmonic sums with automatic convergence checks and can u
 - `single_perturber_classic.py`: fixed-center single-perturber classical limit.
 - `eytan_sound_wave_coefficients.py`: finite-cutoff Eytan--Desjacques--Ginat single-perturber coefficient calculator.
 - `classic_fluid_quadrupole.py`: closed-form massless classical quadrupole formulas.
-- `FORMULAS.md`: formula transcription and normalization notes.
 - `examples/quickstart.py`: small smoke-test style usage example.
 - `paper_plots/`: scripts used to generate representative paper-style figures.
 
@@ -71,7 +70,7 @@ k_n = Omega*sqrt(n^2+n0^2),
 a*k_n = A*sqrt(n^2+n0^2).
 ```
 
-For the Schrödinger-Poisson quantum-fluid, the code parameter is the number ($\mathcal{M}_Q=a\sqrt{\Omega}$):
+For the Schrödinger-Poisson quantum fluid, the code parameter is the number ($\mathcal{M}_Q=a\sqrt{\Omega}$):
 
 ```text
 A = a*sqrt(Omega).

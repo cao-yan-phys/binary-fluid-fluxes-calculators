@@ -4,7 +4,7 @@ The returned value is
 
     F_y / (2 * rho_bar * M**2 / c_s**2)
 
-using Eq. (2.52) from the formulas transcribed in FORMULAS.md:
+using the implemented normalized harmonic expression:
 
     sum_{n>=1} int dOmega |K_n|^2 sin(theta) sin(phi).
 

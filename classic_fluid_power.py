@@ -4,9 +4,9 @@ The returned value is
 
     P / (2 * rho_bar * M**2 / c_s)
 
-using the formulas transcribed in FORMULAS.md.  The harmonic sum is evaluated
-until an internal tail-convergence criterion is satisfied.  The CUDA backend
-uses Numba and falls back to the CPU backend when CUDA is unavailable.
+using the implemented normalized harmonic expression.  The harmonic sum is
+evaluated until an internal tail-convergence criterion is satisfied.  The CUDA
+backend uses Numba and falls back to the CPU backend when CUDA is unavailable.
 """
 
 from __future__ import annotations

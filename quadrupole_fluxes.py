@@ -1,7 +1,7 @@
 """General quadrupole-approximation flux calculators.
 
-This module implements the Bessel-expression quadrupole sums from
-``codex_quadrupole_approx_guidance.txt`` without setting ``n0 = 0``.
+This module implements the Bessel-expression quadrupole sums without setting
+``n0 = 0``.
 
 The normalized helpers match the existing full numerical calculators:
 
