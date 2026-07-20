@@ -200,7 +200,7 @@ These scripts intentionally use moderate grids by default. Increase `--n-max`, `
 - The infinite harmonic sum is not returned at an arbitrary cutoff by default. The calculators evaluate chunks of harmonics until recent tail contributions are below the requested tolerance for several consecutive checks.
 - Classical-fluid point-source calculations have a built-in large-harmonic speed-threshold guard.
 - Please verify convergence settings for each new parameter regime.
-- The quantum fluid is classical.
+- The quantum fluid is described classically.
 
 ## References
 
