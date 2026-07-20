@@ -93,7 +93,7 @@ k_n = sqrt(Omega)*(n^2+n0^2)^(1/4),
 a*k_n = A*(n^2+n0^2)^(1/4).
 ```
 
-This is the default $c_S=0$ case. To include a finite quantum-fluid sound term, pass `cS_over_sqrtOmega` or the signed parameter `cS2_over_Omega` ($c_S^2/\Omega \in \mathbb{R}$) to the `quantum_fluid.py` calculators; the corresponding CLI flags are `--cS-over-sqrtOmega` and `--cS2-over-Omega`.
+This is the default $c_S=0$ case. A finite quantum-fluid sound term is controlled by `cS2_over_Omega` ($c_S^2/\Omega \in \mathbb{R}$).
 
 The returned values are dimensionless normalized fluxes. For a homogeneous background density `rho_bar`, the classical-fluid outputs correspond to
 

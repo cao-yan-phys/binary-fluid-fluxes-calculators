@@ -7,9 +7,8 @@ The default quantum-fluid formulas use
 where `n0 = m/Omega`.  This differs from the classical-fluid convention
 `A = a*Omega`.
 
-For a finite quartic-interaction sound term, pass the signed parameter
-`cS2_over_Omega = c_S**2/Omega`.  The convenience parameter
-`cS_over_sqrtOmega = c_S/sqrt(Omega)` is also accepted for `c_S**2 >= 0`.
+For a finite quartic-interaction sound term, pass
+`cS2_over_Omega = c_S**2/Omega`.
 Then
 
     a k_n = A * kappa_n,
@@ -414,8 +413,7 @@ def quantum_fluid_quantity(
     e: float,
     n0: float,
     A: float,
-    cS2_over_Omega: float | None = None,
-    cS_over_sqrtOmega: float = 0.0,
+    cS2_over_Omega: float = 0.0,
     n_max: int = DEFAULT_MAX_N,
     n_xi: int | None = None,
     n_mu: int = 32,
@@ -433,14 +431,7 @@ def quantum_fluid_quantity(
 
     if quantity not in QUANTITY_INDEX:
         raise ValueError("quantity must be 'power', 'tau_z', or 'force_y'")
-    if cS2_over_Omega is None:
-        if cS_over_sqrtOmega < 0.0:
-            raise ValueError("cS_over_sqrtOmega = c_S/sqrt(Omega) must be non-negative")
-        signed_cS2_over_Omega = cS_over_sqrtOmega * cS_over_sqrtOmega
-    else:
-        if cS_over_sqrtOmega != 0.0:
-            raise ValueError("pass either cS2_over_Omega or cS_over_sqrtOmega, not both")
-        signed_cS2_over_Omega = float(cS2_over_Omega)
+    cS2_value = float(cS2_over_Omega)
     _validate_inputs(
         nu=nu,
         e=e,
@@ -450,7 +441,7 @@ def quantum_fluid_quantity(
         n_xi=n_xi,
         n_mu=n_mu,
         n_phi=n_phi,
-        cS2_over_Omega=signed_cS2_over_Omega,
+        cS2_over_Omega=cS2_value,
     )
     if backend not in ("auto", "cuda", "cpu"):
         raise ValueError("backend must be 'auto', 'cuda', or 'cpu'")
@@ -511,7 +502,7 @@ def quantum_fluid_quantity(
             sqrt_one_minus_e2=sqrt_one_minus_e2,
             A=A,
             n0=n0,
-            cS2_over_Omega=signed_cS2_over_Omega,
+            cS2_over_Omega=cS2_value,
         )
         terms = all_quantity_terms[quantity_index]
         all_n.append(n_values.copy())
@@ -571,13 +562,8 @@ def quantum_fluid_quantity(
             "n0": float(n0),
             "A": float(A),
             "A_definition": "A = a*sqrt(Omega)",
-            "cS2_over_Omega": float(signed_cS2_over_Omega),
-            "cS2_over_Omega_definition": "cS2_over_Omega = c_S^2/Omega, signed",
-            "cS_over_sqrtOmega": (
-                math.sqrt(signed_cS2_over_Omega)
-                if signed_cS2_over_Omega >= 0.0
-                else None
-            ),
+            "cS2_over_Omega": float(cS2_value),
+            "cS2_over_Omega_definition": "cS2_over_Omega = c_S^2/Omega",
             "n_max_safety": int(n_max),
             "n_max_evaluated": int(n_done[-1]),
             "n_xi": None if n_xi is None else int(n_xi),
@@ -637,20 +623,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--n0", type=float, required=True, help="n0 = m/Omega")
     parser.add_argument("--A", type=float, required=True, help="quantum A = a*sqrt(Omega)")
     parser.add_argument(
-        "--cS-over-sqrtOmega",
-        "--C",
-        dest="cS_over_sqrtOmega",
-        type=float,
-        default=0.0,
-        help="C = c_S/sqrt(Omega); default 0",
-    )
-    parser.add_argument(
         "--cS2-over-Omega",
-        "--S",
         dest="cS2_over_Omega",
         type=float,
-        default=None,
-        help="signed S = c_S^2/Omega; do not combine with --C",
+        default=0.0,
+        help="cS2_over_Omega = c_S^2/Omega; default 0",
     )
     parser.add_argument("--n-max", type=int, default=DEFAULT_MAX_N)
     parser.add_argument("--n-xi", type=int, default=None)
@@ -681,7 +658,6 @@ def main() -> None:
         n0=args.n0,
         A=args.A,
         cS2_over_Omega=args.cS2_over_Omega,
-        cS_over_sqrtOmega=args.cS_over_sqrtOmega,
         n_max=args.n_max,
         n_xi=args.n_xi,
         n_mu=args.n_mu,
