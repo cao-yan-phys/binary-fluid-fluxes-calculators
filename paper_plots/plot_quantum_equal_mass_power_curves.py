@@ -36,7 +36,7 @@ from scipy.special import jv
 from quadrupole_fluxes import quantum_quadrupole_flux_normalized
 
 
-OUTPUT_DIR = Path("outputs/quantum_equal_mass_power_curves")
+OUTPUT_DIR = Path("outputs/paper_plots")
 NU_EQUAL_MASS = 0.25
 
 
@@ -255,12 +255,15 @@ def main() -> None:
             "quadrupole_csv": str(OUTPUT_DIR / "quantum_equal_mass_power_curves_quadrupole.csv"),
         },
     }
-    (OUTPUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (OUTPUT_DIR / "quantum_equal_mass_power_curves_summary.json").write_text(
+        json.dumps(summary, indent=2),
+        encoding="utf-8",
+    )
     print(f"plot png = {OUTPUT_DIR / 'quantum_equal_mass_power_curves.png'}")
     print(f"plot pdf = {OUTPUT_DIR / 'quantum_equal_mass_power_curves.pdf'}")
     print(f"full csv = {OUTPUT_DIR / 'quantum_equal_mass_power_curves_full.csv'}")
     print(f"quad csv = {OUTPUT_DIR / 'quantum_equal_mass_power_curves_quadrupole.csv'}")
-    print(f"summary = {OUTPUT_DIR / 'summary.json'}")
+    print(f"summary = {OUTPUT_DIR / 'quantum_equal_mass_power_curves_summary.json'}")
     print(f"all converged = {summary['full_all_converged']}")
     print(f"max tail ratio = {summary['full_max_tail_ratio']:.3e}")
     print(f"max n evaluated = {summary['full_max_n_evaluated']}")

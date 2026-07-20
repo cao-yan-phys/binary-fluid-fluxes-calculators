@@ -1,4 +1,4 @@
-"""Classical-fluid eccentricity-scan flux plot.
+"""Paper Fig. 3: classical fluxes for eccentric binaries with nu=0.2.
 
 The figure has three panels for normalized P, tau_z, and -F_y versus Mach
 number.  The line color labels eccentricity.
@@ -42,17 +42,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("outputs/classical_ecc_fluxes"),
+        default=Path("outputs/paper_plots"),
     )
-    parser.add_argument("--figure-stem", type=str, default="classical_ecc_fluxes")
+    parser.add_argument("--figure-stem", type=str, default="paper_fig3_nu02_ecc_fluxes")
     parser.add_argument(
         "--report-title",
         type=str,
-        default="Classical-Fluid Eccentricity Scan",
+        default="Paper Fig. 3: Classical nu=0.2 Eccentricity Scan",
     )
     parser.add_argument("--backend", choices=("auto", "cuda", "cpu"), default="cuda")
     parser.add_argument("--eccentricities", type=float, nargs="+", default=[0.0, 0.2, 0.4, 0.8])
-    parser.add_argument("--nu", type=float, default=0.25)
+    parser.add_argument("--nu", type=float, default=0.20)
     parser.add_argument("--mach-min", type=float, default=0.05)
     parser.add_argument("--curve-fraction", type=float, default=0.92)
     parser.add_argument("--num-mach", type=int, default=18)
@@ -62,7 +62,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--n-phi", type=int, default=48)
     parser.add_argument("--xi-per-n", type=int, default=4)
     parser.add_argument("--atol", type=float, default=1.0e-20)
-    parser.add_argument("--linear-y", action="store_true")
+    parser.add_argument("--linear-y", dest="linear_y", action="store_true", default=True)
+    parser.add_argument("--log-y", dest="linear_y", action="store_false")
     return parser.parse_args()
 
 
@@ -256,7 +257,7 @@ def main() -> None:
     df = compute_rows(args)
     mono = monotonic_summary(df)
     data_path = args.output_dir / f"{args.figure_stem}_data.csv"
-    mono_path = args.output_dir / "n0_monotonic_check.csv"
+    mono_path = args.output_dir / f"{args.figure_stem}_n0_monotonic_check.csv"
     df.to_csv(data_path, index=False)
     mono.to_csv(mono_path, index=False)
     save_plot(df, args, args.output_dir)
@@ -289,7 +290,8 @@ def main() -> None:
         },
         "n0_monotonic_check": mono.to_dict(orient="records"),
     }
-    (args.output_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    summary_path = args.output_dir / f"{args.figure_stem}_summary.json"
+    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     report = [
         f"# {args.report_title}",
         "",
@@ -297,8 +299,8 @@ def main() -> None:
         "",
         f"- `{args.figure_stem}.png/pdf`",
         f"- `{args.figure_stem}_data.csv`",
-        "- `n0_monotonic_check.csv`",
-        "- `summary.json`",
+        f"- `{args.figure_stem}_n0_monotonic_check.csv`",
+        f"- `{args.figure_stem}_summary.json`",
         "",
         "Summary:",
         "",
@@ -306,7 +308,10 @@ def main() -> None:
         json.dumps(summary, indent=2),
         "```",
     ]
-    (args.output_dir / "REPORT.md").write_text("\n".join(report) + "\n", encoding="utf-8")
+    (args.output_dir / f"{args.figure_stem}_REPORT.md").write_text(
+        "\n".join(report) + "\n",
+        encoding="utf-8",
+    )
 
     print(f"figure = {args.output_dir / f'{args.figure_stem}.png'}")
     print(f"data = {data_path}")

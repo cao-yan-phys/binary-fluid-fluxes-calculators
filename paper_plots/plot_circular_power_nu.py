@@ -42,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("outputs/paper_circular_power_nu"),
+        default=Path("outputs/paper_plots"),
     )
     parser.add_argument("--backend", choices=("auto", "cuda", "cpu"), default="cuda")
     parser.add_argument("--nu-values", type=float, nargs="+", default=[0.25, 0.20, 0.10, 0.05])
@@ -340,7 +340,7 @@ def main() -> None:
         "numeric_csv": str(numeric_path),
         "reference_points_csv": str(refs_path),
     }
-    summary_path = args.output_dir / "summary.json"
+    summary_path = args.output_dir / "circular_power_nu_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     print(f"numeric csv = {numeric_path}")

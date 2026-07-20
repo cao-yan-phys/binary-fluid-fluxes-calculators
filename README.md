@@ -18,7 +18,7 @@ The code evaluates the harmonic sums with automatic convergence checks and can u
 - `eytan_sound_wave_coefficients.py`: finite-cutoff Eytan--Desjacques--Ginat single-perturber coefficient calculator.
 - `classic_fluid_quadrupole.py`: closed-form massless classical quadrupole formulas.
 - `examples/quickstart.py`: small smoke-test style usage example.
-- `paper_plots/`: scripts used to generate representative paper-style figures.
+- `paper_plots/`: one script for each public paper flux figure.
 
 ## Parameters
 
@@ -186,10 +186,13 @@ print(eytan.P_shape)
 
 ## Paper-Style Plots
 
-The scripts in `paper_plots/` write outputs below an `outputs/` directory. For example:
+The scripts in `paper_plots/` write outputs below `outputs/paper_plots/`. Each script corresponds to one public paper flux figure:
 
 ```powershell
-python paper_plots/plot_paper_fig3_classical_nu02_ecc_fluxes.py
+python paper_plots/plot_circular_power_nu.py
+python paper_plots/plot_paper_fig1_emri_fluxes.py
+python paper_plots/plot_paper_fig3_nu02_ecc_fluxes.py
+python paper_plots/plot_quantum_equal_mass_power_curves.py
 python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
 ```
 
