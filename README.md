@@ -93,6 +93,8 @@ k_n = sqrt(Omega)*(n^2+n0^2)^(1/4),
 a*k_n = A*(n^2+n0^2)^(1/4).
 ```
 
+This is the default $c_S=0$ case. To include a finite quantum-fluid sound term, pass `cS_over_sqrtOmega` or the signed parameter `cS2_over_Omega` to the `quantum_fluid.py` calculators; the corresponding CLI flags are `--cS-over-sqrtOmega` and `--cS2-over-Omega`.
+
 The returned values are dimensionless normalized fluxes. For a homogeneous background density `rho_bar`, the classical-fluid outputs correspond to
 
 ```text
@@ -184,9 +186,9 @@ print(quantum.value)
 print(eytan.P_shape)
 ```
 
-## Paper-Style Plots
+## Paper Plots
 
-The scripts in `paper_plots/` write outputs below `outputs/paper_plots/`. Each script corresponds to one public paper flux figure:
+The scripts in `paper_plots/` write outputs below `outputs/paper_plots/`.
 
 ```powershell
 python paper_plots/plot_circular_power_nu.py
@@ -195,8 +197,6 @@ python paper_plots/plot_paper_fig3_nu02_ecc_fluxes.py
 python paper_plots/plot_quantum_equal_mass_power_curves.py
 python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
 ```
-
-These scripts intentionally use moderate grids by default. Increase `--n-max`, `--n-mu`, `--n-phi`, or decrease `--rtol` for production runs.
 
 ## Notes
 
