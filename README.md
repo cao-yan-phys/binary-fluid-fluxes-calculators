@@ -204,3 +204,7 @@ python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
 ## References
 
 - G. Eytan, V. Desjacques, and Y. B. Ginat, [arXiv:2509.15632](https://arxiv.org/abs/2509.15632). This repository implements only their single-perturber result in `eytan_sound_wave_coefficients.py`.
+
+# Periastron Precession Calculators
+
+The `precession/` module calculates the conservative periastron precession of an eccentric binary in homogeneous classical-fluid and quantum-fluid backgrounds, using a time-symmetric response prescription.  Its parameter adapters use the same `nu`, `e`, `n0`, and `A` conventions as the flux calculators: `A = a*Omega` for a classical fluid and `A = a*sqrt(Omega)` for a quantum fluid.  Both media can be evaluated with or without self-gravity.  `precession_calculator.py` provides the command-line interface; the default point-source implementation uses real-space response kernels, while the finite-window CUDA/principal-value route is retained for validation.

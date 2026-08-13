@@ -1,4 +1,4 @@
-"""Quadrupole approximation for the classical-fluid n0=0 binary fluxes.
+"""Quadrupole-order approximation for the classical-fluid n0=0 binary fluxes.
 
 The normalized helpers match the conventions used by the numerical
 calculators:
