@@ -97,7 +97,7 @@ def quantum_precession_flux_parameters(
     fluid = QuantumFluid(
         rho_bar=n0 * n0 / (4.0 * math.pi),
         m_phi=0.5 * omega_auxiliary,
-        c_s_squared=cS2_over_Omega / omega_auxiliary,
+        c_S_squared=cS2_over_Omega * omega_auxiliary,
         include_self_gravity=include_self_gravity,
     )
     result = quantum_precession(orbit, fluid, config)

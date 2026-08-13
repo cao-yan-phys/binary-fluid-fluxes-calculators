@@ -109,28 +109,30 @@ def quantum_gprime_n(fluid: QuantumFluid, omega: float, radius: np.ndarray | flo
 def quantum_static_no_sg_finite_cs_g(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
     """Static quantum-fluid kernel without self-gravity and with positive ``c_S^2``."""
 
-    sound_squared = fluid.sound_speed_squared
-    if fluid.include_self_gravity or sound_squared <= 0.0:
+    c_S_squared = fluid.c_S_squared
+    if fluid.include_self_gravity or c_S_squared <= 0.0:
         raise ValueError("finite-c_S static kernel requires a quantum fluid without self-gravity and c_S^2 > 0")
     r = _array_radius(radius)
-    lam = 2.0 * fluid.m_phi * math.sqrt(sound_squared)
+    coefficient = fluid.physical_k2_coefficient
+    lam = math.sqrt(c_S_squared)
     correction = np.divide(
         1.0 - np.exp(-lam * r),
         r,
         out=np.full_like(r, lam),
         where=r > 0.0,
     )
-    return 2.0 * math.pi * fluid.rho_bar / sound_squared * (r + 2.0 * correction / (lam * lam))
+    return 2.0 * math.pi * fluid.rho_bar / coefficient * (r + 2.0 * correction / (lam * lam))
 
 
 def quantum_static_no_sg_finite_cs_gprime(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
     """Analytic radial derivative of the finite-``c_S`` static quantum-fluid kernel."""
 
-    sound_squared = fluid.sound_speed_squared
-    if fluid.include_self_gravity or sound_squared <= 0.0:
+    c_S_squared = fluid.c_S_squared
+    if fluid.include_self_gravity or c_S_squared <= 0.0:
         raise ValueError("finite-c_S static kernel requires a quantum fluid without self-gravity and c_S^2 > 0")
     r = _array_radius(radius)
-    lam = 2.0 * fluid.m_phi * math.sqrt(sound_squared)
+    coefficient = fluid.physical_k2_coefficient
+    lam = math.sqrt(c_S_squared)
     z = lam * r
     numerator = np.where(
         np.abs(z) < 1.0e-4,
@@ -139,7 +141,7 @@ def quantum_static_no_sg_finite_cs_gprime(fluid: QuantumFluid, radius: np.ndarra
     )
     quotient = np.divide(numerator, r * r, out=np.full_like(r, -0.5 * lam * lam), where=r > 0.0)
     bracket = 1.0 + 2.0 * quotient / (lam * lam)
-    return 2.0 * math.pi * fluid.rho_bar * bracket / sound_squared
+    return 2.0 * math.pi * fluid.rho_bar * bracket / coefficient
 
 
 def quantum_static_no_sg_negative_cs2_g(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
@@ -150,12 +152,12 @@ def quantum_static_no_sg_negative_cs2_g(fluid: QuantumFluid, radius: np.ndarray 
     uniquely relevant finite part.
     """
 
-    sound_squared = fluid.sound_speed_squared
-    if fluid.include_self_gravity or sound_squared >= 0.0:
+    c_S_squared = fluid.c_S_squared
+    if fluid.include_self_gravity or c_S_squared >= 0.0:
         raise ValueError("negative-c_S^2 static kernel requires a quantum fluid without self-gravity and c_S^2 < 0")
     r = _array_radius(radius)
-    speed = math.sqrt(-sound_squared)
-    wave_number = 2.0 * fluid.m_phi * speed
+    coefficient = fluid.physical_k2_coefficient
+    wave_number = math.sqrt(-c_S_squared)
     z = wave_number * r
     numerator = np.where(
         np.abs(z) < 1.0e-4,
@@ -163,18 +165,20 @@ def quantum_static_no_sg_negative_cs2_g(fluid: QuantumFluid, radius: np.ndarray 
         1.0 - np.cos(z),
     )
     quotient = np.divide(numerator, r, out=np.zeros_like(r), where=r > 0.0)
-    return FOUR_PI * fluid.rho_bar * (-0.5 * r / (speed * speed) + quotient / (wave_number * wave_number * speed * speed))
+    return FOUR_PI * fluid.rho_bar * (
+        0.5 * r / coefficient + quotient / (wave_number * wave_number * (-coefficient))
+    )
 
 
 def quantum_static_no_sg_negative_cs2_gprime(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
     """Derivative of the finite negative-``c_S^2`` static kernel."""
 
-    sound_squared = fluid.sound_speed_squared
-    if fluid.include_self_gravity or sound_squared >= 0.0:
+    c_S_squared = fluid.c_S_squared
+    if fluid.include_self_gravity or c_S_squared >= 0.0:
         raise ValueError("negative-c_S^2 static kernel requires a quantum fluid without self-gravity and c_S^2 < 0")
     r = _array_radius(radius)
-    speed = math.sqrt(-sound_squared)
-    wave_number = 2.0 * fluid.m_phi * speed
+    coefficient = fluid.physical_k2_coefficient
+    wave_number = math.sqrt(-c_S_squared)
     z = wave_number * r
     numerator = np.where(
         np.abs(z) < 1.0e-4,
@@ -182,4 +186,6 @@ def quantum_static_no_sg_negative_cs2_gprime(fluid: QuantumFluid, radius: np.nda
         z * np.sin(z) - (1.0 - np.cos(z)),
     )
     quotient = np.divide(numerator, r * r, out=np.full_like(r, 0.5 * wave_number * wave_number), where=r > 0.0)
-    return FOUR_PI * fluid.rho_bar * (-0.5 / (speed * speed) + quotient / (wave_number * wave_number * speed * speed))
+    return FOUR_PI * fluid.rho_bar * (
+        0.5 / coefficient + quotient / (wave_number * wave_number * (-coefficient))
+    )

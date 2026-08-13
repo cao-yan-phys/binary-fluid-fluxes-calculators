@@ -247,7 +247,7 @@ def _per_harmonic(
         elif n == 0:
             derivative = (
                 (lambda radius: quantum_static_no_sg_finite_cs_gprime(medium, radius))
-                if medium.sound_speed_squared > 0.0
+                if medium.c_S_squared > 0.0
                 else (lambda radius: quantum_static_no_sg_negative_cs2_gprime(medium, radius))
             )
         else:
