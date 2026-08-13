@@ -28,8 +28,8 @@ Returned normalizations:
         F_y * sqrt(Omega) / m_phi
         / (2 * rho_bar * M**2 * m_phi / sqrt(Omega))
 
-The force is along y for the setup in Eq. (2.52), so `force_y` is the nonzero
-component of `F_q`.
+For the coordinate convention of Eq. (2.52), `force_y` denotes the
+y-component of the linear-momentum flux, `F_y`.
 """
 
 from __future__ import annotations

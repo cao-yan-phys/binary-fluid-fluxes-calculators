@@ -1,6 +1,6 @@
 """Paper Fig. 3 quantum-fluid counterpart for eccentric binaries with nu=0.2.
 
-Three panels show the normalized quantum-fluid power, torque, and y-force
+Three panels show the normalized quantum-fluid energy flux, angular-momentum flux, and y-component of linear-momentum flux
 component versus
 
     M_Q = A = a*sqrt(Omega).

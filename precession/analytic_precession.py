@@ -1,4 +1,4 @@
-"""Point-source real-space production engine for conservative precession."""
+"""Point-source real-space engine for conservative periastron precession."""
 
 from __future__ import annotations
 

@@ -220,7 +220,7 @@ class OffshellSource:
         self.grid, self.position, self.position_e = relative_orbit_arrays(orbit, n_ell)
 
     def spectrum(self, k_vector: np.ndarray) -> SourceSpectrum:
-        """Return the full nonnegative-harmonic spectrum at arbitrary ``k``."""
+        """Return all nonnegative harmonics at arbitrary ``k``."""
 
         k_vector = np.asarray(k_vector, dtype=np.float64)
         if k_vector.shape != (3,):

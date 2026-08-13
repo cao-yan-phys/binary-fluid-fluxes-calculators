@@ -1,4 +1,4 @@
-"""Closed all-harmonic classical acoustic pair kernel."""
+"""Closed all-harmonic acoustic pair kernel for a classical fluid."""
 
 from __future__ import annotations
 

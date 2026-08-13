@@ -1,6 +1,6 @@
 """Smooth circular equal-mass quantum-fluid power curves.
 
-For ``nu=1/4`` and ``e=0`` the full quantum power reduces to a one-dimensional
+For ``nu=1/4`` and ``e=0`` the quantum-fluid power reduces to a one-dimensional
 Bessel sum over even harmonics,
 
     P_hat = sum_even_n n/(n^2+n0^2)^(3/4)
@@ -9,7 +9,7 @@ Bessel sum over even harmonics,
 where ``P_hat = P/(2*rho_bar*M^2*m_phi/sqrt(Omega))`` and
 ``beta_n = (A/2) * (n^2+n0^2)^(1/4)`` with ``A = a*sqrt(Omega)``.
 
-The script uses this circular reduction for smooth full curves and overlays
+The script uses this circular reduction for smooth numerical curves and overlays
 the general quantum quadrupole approximation as sparse points.
 """
 
@@ -244,7 +244,7 @@ def main() -> None:
         "nu": NU_EQUAL_MASS,
         "e": 0.0,
         "n0_values": [0.0, 1.0],
-        "full_curve_method": "equal-mass circular Bessel reduction of the full quantum calculator",
+        "full_curve_method": "equal-mass circular Bessel reduction of the quantum-fluid calculator",
         "full_all_converged": bool(df_full["converged"].to_numpy().all()),
         "full_max_tail_ratio": float(df_full["tail_ratio"].max()),
         "full_max_n_evaluated": int(df_full["n_evaluated"].max()),
@@ -261,7 +261,7 @@ def main() -> None:
     )
     print(f"plot png = {OUTPUT_DIR / 'quantum_equal_mass_power_curves.png'}")
     print(f"plot pdf = {OUTPUT_DIR / 'quantum_equal_mass_power_curves.pdf'}")
-    print(f"full csv = {OUTPUT_DIR / 'quantum_equal_mass_power_curves_full.csv'}")
+    print(f"numerical csv = {OUTPUT_DIR / 'quantum_equal_mass_power_curves_full.csv'}")
     print(f"quad csv = {OUTPUT_DIR / 'quantum_equal_mass_power_curves_quadrupole.csv'}")
     print(f"summary = {OUTPUT_DIR / 'quantum_equal_mass_power_curves_summary.json'}")
     print(f"all converged = {summary['full_all_converged']}")

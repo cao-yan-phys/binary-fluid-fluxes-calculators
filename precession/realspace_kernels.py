@@ -20,13 +20,13 @@ def _array_radius(radius: np.ndarray | float) -> np.ndarray:
 
 
 def classical_g_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray | float) -> np.ndarray:
-    """Exact classical point-source kernel ``g_n(r)``."""
+    """Exact point-source kernel ``g_n(r)`` for a classical fluid."""
 
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
     if a_value == 0.0:
         if fluid.include_self_gravity:
-            raise ValueError("classical self-gravitating kernel has vanishing A_n")
+            raise ValueError("the kernel for a self-gravitating classical fluid has vanishing A_n")
         return 2.0 * math.pi * fluid.rho_bar * r / (fluid.c_s * fluid.c_s)
     wave_number = math.sqrt(a_value) / fluid.c_s
     z = wave_number * r
@@ -40,14 +40,14 @@ def classical_g_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray | floa
 
 
 def classical_gprime_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray | float) -> np.ndarray:
-    """Radial derivative of the exact classical point-source kernel."""
+    """Radial derivative of the exact point-source kernel for a classical fluid."""
 
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
     static_limit = 2.0 * math.pi * fluid.rho_bar / (fluid.c_s * fluid.c_s)
     if a_value == 0.0:
         if fluid.include_self_gravity:
-            raise ValueError("classical self-gravitating kernel has vanishing A_n")
+            raise ValueError("the kernel for a self-gravitating classical fluid has vanishing A_n")
         return np.full_like(r, static_limit, dtype=np.float64)
     wave_number = math.sqrt(a_value) / fluid.c_s
     z = wave_number * r
@@ -145,7 +145,7 @@ def quantum_static_no_sg_finite_cs_gprime(fluid: QuantumFluid, radius: np.ndarra
 def quantum_static_no_sg_negative_cs2_g(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
     """Finite, orbit-dependent static kernel for negative ``c_S^2``.
 
-    The full ``A_0 -> 0`` kernel contains an additive infrared constant.  It
+    The ``A_0 -> 0`` kernel contains an additive infrared constant.  It
     drops out of the eccentricity derivative, so this function returns the
     uniquely relevant finite part.
     """

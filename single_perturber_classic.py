@@ -1,11 +1,11 @@
-"""Classical-fluid direct-sum calculators for one eccentric Keplerian perturber.
+"""Classical-fluid harmonic-sum calculators for one eccentric Keplerian perturber.
 
 This module computes the fixed-center, single-perturber limit with the same
-direct harmonic-sum method used by our binary calculators.  It is not an
+harmonic-sum method used by the binary calculators.  It is not an
 implementation of the Eytan--Desjacques--Ginat coefficient expansion; that
 finite-cutoff formula is implemented separately in
 ``eytan_sound_wave_coefficients.py``.  The purpose of this module is to provide
-our direct-integration result for comparison with that EDG formula.
+our result for comparison with that EDG formula.
 
 The single-source calculation uses
 
@@ -22,7 +22,7 @@ Returned normalizations:
     tau_z:
         tau_z * tilde_Omega / (2 rho_bar m_p**2 / c_s)
 
-    force_y:
+    linear-momentum flux:
         F_y / (2 rho_bar m_p**2 / c_s**2)
 
 Here `m_p` is the mass of the fixed-center perturber.
@@ -65,7 +65,7 @@ Example comparison at the same parameter point:
     print(tau.value / (2.0*pi*common["A"]), edg.tau_z_shape)
 
 With these conventions the two printed pairs should be close.  The factors
-``2*pi`` and ``2*pi*A`` convert between this module's direct flux normalizations
+``2*pi`` and ``2*pi*A`` convert between this module's flux normalizations
 and the shape normalizations returned by ``eytan_sound_wave_coefficients.py``.
 """
 

@@ -1,9 +1,4 @@
-"""Conservative periastron precession in homogeneous fluid backgrounds.
-
-The package is independent of the absorptive on-shell flux calculators.  It
-uses a time-symmetric principal-value response and physical orbital frequency
-``tildeOmega`` throughout its public API.
-"""
+"""Conservative periastron precession in homogeneous classical-fluid and quantum-fluid backgrounds."""
 
 from .periastron_precession import (
     PrecessionConfig,

@@ -3,7 +3,7 @@
 This module implements the Bessel-expression quadrupole sums without setting
 ``n0 = 0``.
 
-The normalized helpers match the existing full numerical calculators:
+The normalized helpers match the numerical calculators:
 
 Classical fluid:
     ``P/(2*rho_bar*M**2/c_s)`` and

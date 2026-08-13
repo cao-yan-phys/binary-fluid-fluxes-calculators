@@ -118,7 +118,7 @@ def compute_rows(args: argparse.Namespace) -> pd.DataFrame:
                 p = classical_fluid_power(**common)
                 tau = classical_fluid_tau_z(**common)
                 if abs(args.nu - 0.25) < 1.0e-14:
-                    # Equal masses have no net orbit-averaged y-force by symmetry.
+                    # Equal masses have no net orbit-averaged y-component of linear-momentum flux by symmetry.
                     fy_value = 0.0
                     minus_fy = np.nan
                     fy_converged = True

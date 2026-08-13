@@ -1,4 +1,4 @@
-"""Calculator for the classical-fluid normalized y force.
+"""Calculator for the normalized y-component of the classical-fluid linear-momentum flux.
 
 The returned value is
 
@@ -442,7 +442,7 @@ def classical_fluid_force_y(
         tail_sum=tail_sum,
         tail_ratio=tail_ratio,
         parameters={
-            "quantity": "force_y_normalized",
+            "quantity": "F_y_normalized",
             "normalization": "F_y/(2*rho_bar*M^2/c_s^2)",
             "nu": float(nu),
             "m1_over_M": q1,
@@ -479,7 +479,7 @@ def _write_terms_csv(path: Path, result: ClassicalFluidResult) -> None:
         path,
         data,
         delimiter=",",
-        header="n,term,cumulative_normalized_force_y",
+        header="n,term,cumulative_normalized_F_y",
         comments="",
     )
 
@@ -535,7 +535,7 @@ def main() -> None:
         xi_per_n=args.xi_per_n,
     )
 
-    print(f"normalized_force_y = {result.value:.16e}")
+    print(f"normalized_F_y = {result.value:.16e}")
     print(f"backend = {result.backend}")
     print(f"n_evaluated = 1..{result.n_values[-1]}")
     print(f"converged = {result.converged}")

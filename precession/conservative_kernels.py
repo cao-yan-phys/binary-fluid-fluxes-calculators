@@ -72,7 +72,7 @@ class ClassicalFluid:
 
 @dataclass(frozen=True)
 class QuantumFluid:
-    """Physical-time Schrodinger-Poisson response with quantum pressure."""
+    """Physical-time response of a Schrodinger-Poisson quantum fluid."""
 
     rho_bar: float
     m_phi: float

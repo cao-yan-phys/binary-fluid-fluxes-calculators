@@ -16,7 +16,7 @@ from .principal_value import principal_value_integral
 
 @dataclass(frozen=True)
 class GaussBenchmarkResult:
-    """Finite-resolution direct-field Gauss-projection benchmark result."""
+    """Finite-resolution reconstructed-field Gauss-projection benchmark result."""
 
     delta_varpi_static: float | None
     delta_varpi_osc: float

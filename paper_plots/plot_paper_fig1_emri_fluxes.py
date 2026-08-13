@@ -6,7 +6,7 @@ The figure has three panels for the scaled nu -> 0 limits at e=0.2:
     tau_z * Omega / (2 rho_bar nu**2 M**2 / c_s),
     (-F_y) / (2 rho_bar nu**2 M**2 / c_s**2).
 
-The direct binary sums use a small finite ``nu_proxy`` only to evaluate this
+The binary sums use a small finite ``nu_proxy`` only to evaluate this
 scaled limit numerically.
 """
 
@@ -78,7 +78,7 @@ def compute_full_rows(args: argparse.Namespace) -> pd.DataFrame:
     for n0 in (0.0, 1.0):
         for mach in mach_values:
             index += 1
-            print(f"[full {index}/{total}] n0={n0:g} Mach={mach:.6g}", flush=True)
+            print(f"[numerical {index}/{total}] n0={n0:g} Mach={mach:.6g}", flush=True)
             common = dict(
                 nu=args.nu_proxy,
                 e=args.e,

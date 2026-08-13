@@ -29,7 +29,7 @@ Engine = Literal["analytic", "legacy_kspace_validation"]
 
 @dataclass(frozen=True)
 class PrecessionConfig:
-    """Resolution settings and the choice of production or validation engine."""
+    """Resolution settings and calculation-engine selection."""
 
     n_max: int = 8
     n_ell: int = 256
