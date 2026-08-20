@@ -34,7 +34,7 @@ c_s         classical-fluid sound speed
 m_phi       scalar-particle mass in the quantum-fluid case
 ```
 
-The orbital period is $T=2\pi/\tilde\Omega$ . The total binary mass is `M = m1 + m2`, and the symmetric mass ratio is
+The orbital period is $T=2\pi/\tilde\Omega$. The total binary mass is `M = m1 + m2`, and the symmetric mass ratio is
 
 ```text
 nu = m1*m2/(m1+m2)^2,    0 < nu <= 1/4.
