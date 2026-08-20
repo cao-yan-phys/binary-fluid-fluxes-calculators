@@ -27,7 +27,7 @@ The following symbols are used throughout:
 ```text
 rho_bar     homogeneous background mass density
 tildeOmega  physical orbital angular frequency, T = 2*pi/tildeOmega
-Omega       orbital frequency in the auxiliary time
+Omega       rescaled orbital frequency
 m           effective tachyonic mass
 n0          m/Omega
 c_s         classical-fluid sound speed
@@ -53,10 +53,7 @@ For the classical inviscid Newtonian barotropic fluid, the code uses the orbital
 A = a*Omega = a*tildeOmega/c_s.
 ```
 
-The auxiliary and physical quantities are related by
-
 ```text
-t_aux = c_s*t_phys,
 Omega = tildeOmega/c_s,
 m^2 = 4*pi*rho_bar/c_s^2,
 n0 = m/Omega = sqrt(4*pi*rho_bar)/tildeOmega,
@@ -76,10 +73,7 @@ For the Schrödinger-Poisson quantum fluid, the code uses the dimensionless orbi
 A = a*sqrt(Omega).
 ```
 
-The auxiliary and physical quantities are related by
-
 ```text
-t_aux = t_phys/(2*m_phi),
 Omega = 2*m_phi*tildeOmega,
 m^2 = 16*pi*m_phi^2*rho_bar,
 n0 = m/Omega = sqrt(4*pi*rho_bar)/tildeOmega,
