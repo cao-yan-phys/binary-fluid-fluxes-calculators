@@ -67,7 +67,7 @@ k_n = Omega*sqrt(n^2+n0^2),
 a*k_n = A*sqrt(n^2+n0^2).
 ```
 
-For the Schrödinger-Poisson quantum fluid, the code uses the dimensionless orbital parameter $\mathcal{M}_Q=a\sqrt{\Omega}=a\sqrt{2m_\phi\tilde\Omega}$:
+For the Schrödinger-Poisson quantum fluid, the code uses the dimensionless orbital parameter $`\mathcal{M}_Q=a\sqrt{\Omega}=a\sqrt{2m_\phi\tilde\Omega}`$:
 
 ```text
 A = a*sqrt(Omega).
