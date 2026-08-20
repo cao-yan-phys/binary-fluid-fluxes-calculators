@@ -26,7 +26,7 @@ The following symbols are used throughout:
 
 ```text
 rho_bar     homogeneous background mass density
-tildeOmega  physical orbital angular frequency, T = 2*pi/tildeOmega
+tildeOmega  physical orbital angular frequency
 Omega       rescaled orbital frequency
 m           effective tachyonic mass
 n0          m/Omega
@@ -34,7 +34,7 @@ c_s         classical-fluid sound speed
 m_phi       scalar-particle mass in the quantum-fluid case
 ```
 
-The total binary mass is `M = m1 + m2`, and the symmetric mass ratio is
+The orbital period is $T=2\pi/\tilde\Omega$. The total binary mass is `M = m1 + m2`, and the symmetric mass ratio is
 
 ```text
 nu = m1*m2/(m1+m2)^2,    0 < nu <= 1/4.
@@ -44,7 +44,7 @@ The relative Keplerian orbit is parameterized by the eccentricity `e` and eccent
 
 ```text
 X/a = (cos xi - e, sqrt(1-e^2) sin xi, 0),
-tildeOmega*t_phys = xi - e*sin xi.
+tildeOmega*t = xi - e*sin xi.
 ```
 
 For the classical inviscid Newtonian barotropic fluid, the code uses the orbital Mach number $\mathcal{M}=a\Omega=a\tilde\Omega/c_s$:
@@ -67,7 +67,7 @@ k_n = Omega*sqrt(n^2+n0^2),
 a*k_n = A*sqrt(n^2+n0^2).
 ```
 
-For the Schrödinger-Poisson quantum fluid, the code uses the dimensionless orbital parameter $\mathcal{M}_Q=a\sqrt{\Omega}$:
+For the Schrödinger-Poisson quantum fluid, the code uses the dimensionless orbital parameter $\mathcal{M}_Q=a\sqrt{\Omega}=a\sqrt{2m_\phi\tilde\Omega}$:
 
 ```text
 A = a*sqrt(Omega).
