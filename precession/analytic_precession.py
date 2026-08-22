@@ -10,7 +10,9 @@ import numpy as np
 
 from .classical_closed_sum import classical_total_pair_kernel_dr
 from .conservative_kernels import ClassicalFluid, ConservativeMedium, QuantumFluid, static_ir_is_prescription_dependent
+from .offshell_source import cuda_available
 from .pair_orbit import PairOrbitGeometry, build_pair_orbit_geometry
+from .realspace_cuda import CudaClassicalSelfGravityCorrection, CudaQuantumPairAverage
 from .realspace_kernels import (
     classical_gprime_n,
     quantum_gprime_n,
@@ -110,6 +112,7 @@ def _build_result(
     harmonic_metadata: dict[str, object],
     analytic_mode: str,
     static_ir: bool,
+    realspace_backend: str = "numpy_realspace",
 ) -> "PrecessionResult":
     from .periastron_precession import PrecessionResult
 
@@ -195,7 +198,7 @@ def _build_result(
             "radial_order": None,
             "n_mu": None,
             "n_phi": None,
-            "backend": "numpy_realspace",
+            "backend": realspace_backend,
             "frequency_weights": {"n=0": 1, "n>=1": 2},
             "self_cross_closure": {
                 "static": None if static_parts is None else float(static_parts[0] - sum(static_parts[1:])),
@@ -226,6 +229,17 @@ def _per_harmonic(
     geometry = build_pair_orbit_geometry(orbit, config.n_ell)
     prefactor = _precession_prefactor(orbit)
     static_ir = static_ir_is_prescription_dependent(medium)
+    cuda_quantum: CudaQuantumPairAverage | None = None
+    realspace_backend = "numpy_realspace"
+    if isinstance(medium, QuantumFluid):
+        if config.backend == "cuda":
+            if not cuda_available():
+                raise RuntimeError("CUDA backend requested, but numba.cuda is unavailable")
+            cuda_quantum = CudaQuantumPairAverage(geometry)
+            realspace_backend = "cuda_realspace"
+        elif config.backend == "auto" and cuda_available():
+            cuda_quantum = CudaQuantumPairAverage(geometry)
+            realspace_backend = "cuda_realspace"
     static_parts: np.ndarray | None = None
     osc_parts: np.ndarray | None = None
     rows: list[HarmonicContribution] = []
@@ -242,9 +256,18 @@ def _per_harmonic(
             )
             continue
         omega = n * orbit.physical_omega
-        if isinstance(medium, ClassicalFluid):
+        if cuda_quantum is not None:
+            pair_parts = cuda_quantum.pair_parts(
+                n,
+                omega,
+                medium.rho_bar,
+                medium.m_phi,
+                medium.c_S_squared,
+                medium.include_self_gravity,
+            )
+        elif isinstance(medium, ClassicalFluid):
             derivative = lambda radius, omega=omega: classical_gprime_n(medium, omega, radius)
-        elif n == 0:
+        elif n == 0 and not medium.include_self_gravity:
             derivative = (
                 (lambda radius: quantum_static_no_sg_finite_cs_gprime(medium, radius))
                 if medium.c_S_squared > 0.0
@@ -253,7 +276,8 @@ def _per_harmonic(
         else:
             derivative = lambda radius, omega=omega: quantum_gprime_n(medium, omega, radius)
         phase: np.ndarray | float = 1.0 if n == 0 else np.cos(n * geometry.delta)
-        pair_parts = _parts_from_radial_function(geometry, derivative, phase)
+        if cuda_quantum is None:
+            pair_parts = _parts_from_radial_function(geometry, derivative, phase)
         weight = 1 if n == 0 else 2
         delta_parts = prefactor * weight * pair_parts
         pole, kappa = medium.roots(omega)
@@ -298,6 +322,7 @@ def _per_harmonic(
         harmonic_metadata=tail_metadata,
         analytic_mode="realspace_per_harmonic",
         static_ir=static_ir,
+        realspace_backend=realspace_backend,
     )
 
 
@@ -348,6 +373,145 @@ def _classical_closed_sum(
         harmonic_metadata={"mode": "closed_all_harmonics"},
         analytic_mode="closed_all_harmonics",
         static_ir=False,
+    )
+
+
+def _classical_self_gravity_closed_correction(
+    orbit: "BinaryOrbit",
+    fluid: ClassicalFluid,
+    config: "PrecessionConfig",
+) -> "PrecessionResult":
+    """Sum the acoustic reference exactly and harmonically correct self-gravity."""
+
+    from .periastron_precession import HarmonicContribution
+
+    geometry = build_pair_orbit_geometry(orbit, config.n_ell)
+    prefactor = _precession_prefactor(orbit)
+    acoustic = ClassicalFluid(
+        rho_bar=fluid.rho_bar,
+        c_s=fluid.c_s,
+        include_self_gravity=False,
+        response_prescription=fluid.response_prescription,
+    )
+    cuda_correction: CudaClassicalSelfGravityCorrection | None = None
+    realspace_backend = "numpy_realspace"
+    if config.backend == "cuda":
+        if not cuda_available():
+            raise RuntimeError("CUDA backend requested, but numba.cuda is unavailable")
+        cuda_correction = CudaClassicalSelfGravityCorrection(geometry)
+        realspace_backend = "cuda_realspace"
+    elif config.backend == "auto" and cuda_available():
+        cuda_correction = CudaClassicalSelfGravityCorrection(geometry)
+        realspace_backend = "cuda_realspace"
+    acoustic_static_pair_parts = _parts_from_radial_function(
+        geometry,
+        lambda radius: classical_gprime_n(acoustic, 0.0, radius),
+    )
+    rows: list[HarmonicContribution] = []
+    static_parts: np.ndarray | None = None
+    if config.sector in ("total", "static"):
+        if cuda_correction is None:
+            static_pair_parts = _parts_from_radial_function(
+                geometry,
+                lambda radius: classical_gprime_n(fluid, 0.0, radius),
+            )
+        else:
+            static_pair_parts = acoustic_static_pair_parts + cuda_correction.correction_parts(
+                0,
+                0.0,
+                fluid.rho_bar,
+                fluid.c_s,
+            )
+        static_parts = prefactor * static_pair_parts
+        pole, kappa = fluid.roots(0.0)
+        rows.append(
+            HarmonicContribution(
+                n=0,
+                frequency_weight=1,
+                sector="static",
+                delta_varpi=float(static_parts[0]),
+                self_1=float(static_parts[1]),
+                self_2=float(static_parts[2]),
+                cross=float(static_parts[3]),
+                radial_error=0.0,
+                k_pole=pole,
+                kappa_evanescent=kappa,
+                radial_subtraction=False,
+            )
+        )
+    if config.sector == "static":
+        return _build_result(
+            orbit,
+            fluid,
+            config,
+            static_parts=static_parts,
+            osc_parts=None,
+            rows=rows,
+            harmonic_converged=True,
+            harmonic_error=0.0,
+            harmonic_metadata={"mode": "static_exact"},
+            analytic_mode="closed_acoustic_plus_self_gravity_correction",
+            static_ir=False,
+            realspace_backend=realspace_backend,
+        )
+
+    acoustic_total_pair_parts = _closed_classical_parts(geometry, orbit, acoustic)
+    osc_parts = prefactor * (acoustic_total_pair_parts - acoustic_static_pair_parts)
+    correction_parts = np.zeros(4, dtype=np.float64)
+    consecutive = 0
+    terminated = False
+    for n in range(1, config.n_max + 1):
+        omega = n * orbit.physical_omega
+        if cuda_correction is None:
+            derivative = lambda radius, omega=omega: (
+                classical_gprime_n(fluid, omega, radius) - classical_gprime_n(acoustic, omega, radius)
+            )
+            pair_parts = _parts_from_radial_function(geometry, derivative, np.cos(n * geometry.delta))
+        else:
+            pair_parts = cuda_correction.correction_parts(n, omega, fluid.rho_bar, fluid.c_s)
+        delta_parts = 2.0 * prefactor * pair_parts
+        correction_parts += delta_parts
+        pole, kappa = fluid.roots(omega)
+        rows.append(
+            HarmonicContribution(
+                n=n,
+                frequency_weight=2,
+                sector="osc",
+                delta_varpi=float(delta_parts[0]),
+                self_1=float(delta_parts[1]),
+                self_2=float(delta_parts[2]),
+                cross=float(delta_parts[3]),
+                radial_error=0.0,
+                k_pole=pole,
+                kappa_evanescent=kappa,
+                radial_subtraction=False,
+            )
+        )
+        converged, _, _ = _harmonic_tail(rows, config)
+        if converged:
+            consecutive += 1
+            if consecutive >= config.consecutive_windows:
+                terminated = True
+                break
+        else:
+            consecutive = 0
+    harmonic_converged, harmonic_error, harmonic_metadata = _harmonic_tail(rows, config)
+    if terminated:
+        harmonic_converged = True
+    harmonic_metadata["summand"] = "self_gravity_minus_acoustic_reference"
+    return _build_result(
+        orbit,
+        fluid,
+        config,
+        static_parts=static_parts,
+        osc_parts=osc_parts + correction_parts,
+        rows=rows,
+        harmonic_converged=harmonic_converged,
+        harmonic_error=harmonic_error,
+        harmonic_metadata=harmonic_metadata,
+        analytic_mode="closed_acoustic_plus_self_gravity_correction",
+        static_ir=False,
+        realspace_backend=realspace_backend,
     )
 
 
@@ -405,7 +569,9 @@ def _fit_circular_limit_analytic(
 
 
 def _calculate_analytic(orbit: "BinaryOrbit", medium: ConservativeMedium, config: "PrecessionConfig") -> "PrecessionResult":
-    if isinstance(medium, ClassicalFluid) and not medium.include_self_gravity:
+    if isinstance(medium, ClassicalFluid):
+        if medium.include_self_gravity:
+            return _classical_self_gravity_closed_correction(orbit, medium, config)
         return _classical_closed_sum(orbit, medium, config)
     return _per_harmonic(orbit, medium, config)
 

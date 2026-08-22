@@ -25,6 +25,8 @@ def classical_g_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray | floa
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
     if a_value == 0.0:
+        if fluid.rho_bar == 0.0:
+            return np.zeros_like(r)
         if fluid.include_self_gravity:
             raise ValueError("the kernel for a self-gravitating classical fluid has vanishing A_n")
         return 2.0 * math.pi * fluid.rho_bar * r / (fluid.c_s * fluid.c_s)
@@ -46,6 +48,8 @@ def classical_gprime_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray |
     a_value = fluid.a_n(omega)
     static_limit = 2.0 * math.pi * fluid.rho_bar / (fluid.c_s * fluid.c_s)
     if a_value == 0.0:
+        if fluid.rho_bar == 0.0:
+            return np.zeros_like(r)
         if fluid.include_self_gravity:
             raise ValueError("the kernel for a self-gravitating classical fluid has vanishing A_n")
         return np.full_like(r, static_limit, dtype=np.float64)
@@ -66,6 +70,8 @@ def quantum_g_n(fluid: QuantumFluid, omega: float, radius: np.ndarray | float) -
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
     if a_value <= 0.0:
+        if a_value == 0.0 and fluid.rho_bar == 0.0:
+            return np.zeros_like(r)
         raise ValueError("finite-frequency quantum-fluid kernel requires positive A_n; use a static special case")
     wave_number, kappa = fluid.roots(omega)
     assert kappa is not None
@@ -88,6 +94,8 @@ def quantum_gprime_n(fluid: QuantumFluid, omega: float, radius: np.ndarray | flo
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
     if a_value <= 0.0:
+        if a_value == 0.0 and fluid.rho_bar == 0.0:
+            return np.zeros_like(r)
         raise ValueError("quantum-fluid kernel requires positive A_n; use a static special case")
     wave_number, kappa = fluid.roots(omega)
     assert kappa is not None
