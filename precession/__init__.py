@@ -1,4 +1,3 @@
-"""Conservative periastron precession in homogeneous classical-fluid and quantum-fluid backgrounds."""
 
 from .periastron_precession import (
     PrecessionConfig,

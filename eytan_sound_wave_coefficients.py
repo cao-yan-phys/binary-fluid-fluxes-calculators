@@ -1,26 +1,3 @@
-"""Finite-cutoff Eytan--Desjacques--Ginat single-perturber coefficient calculator.
-
-This module implements the eccentric single-perturber harmonic coefficients
-
-    I_E = A * sum_{j != 0, l, m} c_lm |g_lm^(j)(j*A, e)|^2,
-    I_L = A * sum_{j != 0, l, m} (m/j) c_lm |g_lm^(j)(j*A, e)|^2,
-
-with finite cutoffs ``jmax`` and ``lmax``.
-
-Here ``A = a*Omega/c_s`` for the fixed-center single perturber.  The returned
-``P_shape`` and ``tau_z_shape`` are not the normalized fluxes themselves.  For
-perturber mass ``m_p``,
-
-    P / (2*rho_bar*m_p**2/c_s) = 2*pi*P_shape,
-    tau_z*tildeOmega / (2*rho_bar*m_p**2/c_s) = 2*pi*A*tau_z_shape.
-
-The returned shape fields are defined as
-
-    P_shape = edot_shape = I_E / A,
-    tau_z_shape = ldot_shape = I_L / A^2,
-
-for ``a = c_s = rho = m_p = 1``.
-"""
 
 from __future__ import annotations
 
@@ -61,7 +38,6 @@ def _validate_inputs(*, A: float, e: float, jmax: int, lmax: int, n_xi: int) -> 
 
 
 def c_lm(l: int, m: int) -> float:
-    """Return the coefficient c_lm, invariant under m -> -m."""
 
     ma = abs(int(m))
     if ma > l:
@@ -92,7 +68,6 @@ def eytan_sound_wave_coefficients(
     lmax: int = 13,
     n_xi: int = 8192,
 ) -> EytanSoundWaveResult:
-    """Compute finite-cutoff ``I_E``, ``I_L``, and the corresponding rate shapes."""
 
     _validate_inputs(A=A, e=e, jmax=jmax, lmax=lmax, n_xi=n_xi)
     mean_anomaly, jacobian, radius_over_a, true_anomaly = _orbit_arrays(e, n_xi)

@@ -9,14 +9,12 @@ The numerical calculators evaluate the harmonic sums with automatic convergence 
 
 ## Contents
 
-- `classic_fluid_power.py`: normalized classical-fluid power, `P/(2*rho_bar*M^2/c_s)`.
-- `classic_fluid_tau_z.py`: normalized classical-fluid angular-momentum flux, `tau_z*tildeOmega/(2*rho_bar*M^2/c_s)`.
-- `classic_fluid_force_y.py`: normalized y-component of the classical-fluid linear-momentum flux, `F_y/(2*rho_bar*M^2/c_s^2)`.
+- `classical_fluid.py`: normalized classical-fluid energy, angular-momentum, and linear-momentum fluxes, `P`, `tau_z`, and `F_y`.
 - `quantum_fluid.py`: normalized quantum-fluid energy, angular-momentum, and linear-momentum fluxes, `P`, `tau_z`, and `F_y`.
 - `quadrupole_fluxes.py`: classical-fluid and $c_S=0$ quantum-fluid fluxes at quadrupole order (quadrupole + monopole radiation).
-- `single_perturber_classic.py`: classical-fluid flux calculator for a fixed-center single perturber, using the same harmonic-sum method as the binary calculators.
+- `single_perturber_classical.py`: classical-fluid flux calculator for a fixed-center single perturber, using the same harmonic-sum method as the binary calculators.
 - `eytan_sound_wave_coefficients.py`: finite-cutoff calculator for the $n_0=0$ Eytan--Desjacques--Ginat single-perturber coefficients.
-- `classic_fluid_quadrupole.py`: closed-form $n_0=0$ classical-fluid fluxes at quadrupole order.
+- `classical_fluid_quadrupole.py`: closed-form $n_0=0$ classical-fluid fluxes at quadrupole order.
 - `examples/quickstart.py`: minimal usage example and smoke test.
 - `paper_plots/`: scripts used to generate the paper figures provided in this repository.
 
@@ -119,7 +117,7 @@ Consequently, the same dimensionless `n0` is used for the classical and quantum 
 n0 = sqrt(4*pi*rho_bar)/tildeOmega.
 ```
 
-The fixed-center single-perturber calculator `single_perturber_classic.py` uses the same classical parameter, `A = a*Omega = a*tildeOmega/c_s`, and returns
+The fixed-center single-perturber calculator `single_perturber_classical.py` uses the same classical parameter, `A = a*Omega = a*tildeOmega/c_s`, and returns
 
 ```text
 single_perturber_power().value = P/(2*rho_bar*m_p^2/c_s),
@@ -155,7 +153,7 @@ python examples/quickstart.py
 Command-line examples:
 
 ```powershell
-python classic_fluid_power.py --nu 0.25 --e 0.2 --n0 0 --A 0.5 --backend auto
+python classical_fluid.py --quantity power --nu 0.25 --e 0.2 --n0 0 --A 0.5 --backend auto
 python quantum_fluid.py --quantity power --nu 0.25 --e 0.2 --n0 0 --A 2.0 --backend auto
 python eytan_sound_wave_coefficients.py --A 0.5 --e 0.2 --jmax 20 --lmax 13
 ```
@@ -163,15 +161,15 @@ python eytan_sound_wave_coefficients.py --A 0.5 --e 0.2 --jmax 20 --lmax 13
 A minimal Python example:
 
 ```python
-from classic_fluid_power import classical_fluid_power
+from classical_fluid import classical_fluid_power
 from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients
 from quantum_fluid import quantum_fluid_power
 
-classic = classical_fluid_power(nu=0.25, e=0.2, n0=0.0, A=0.5, backend="auto")
+classical = classical_fluid_power(nu=0.25, e=0.2, n0=0.0, A=0.5, backend="auto")
 quantum = quantum_fluid_power(nu=0.25, e=0.2, n0=0.0, A=2.0, backend="auto")
 eytan = eytan_sound_wave_coefficients(A=0.5, e=0.2, jmax=20, lmax=13)
 
-print(classic.value)
+print(classical.value)
 print(quantum.value)
 print(eytan.P_shape)
 ```

@@ -1,14 +1,3 @@
-"""Paper Fig. 1: classical EMRI-limit fluxes versus Mach number.
-
-The figure has three panels for the scaled nu -> 0 limits at e=0.2:
-
-    P / (2 rho_bar nu**2 M**2 / c_s),
-    tau_z * Omega / (2 rho_bar nu**2 M**2 / c_s),
-    (-F_y) / (2 rho_bar nu**2 M**2 / c_s**2).
-
-The binary sums use a small finite ``nu_proxy`` only to evaluate this
-scaled limit numerically.
-"""
 
 from __future__ import annotations
 
@@ -32,12 +21,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from classic_fluid_force_y import classical_fluid_force_y
-from classic_fluid_power import classical_fluid_power
-from classic_fluid_tau_z import classical_fluid_tau_z
+from classical_fluid import classical_fluid_force_y, classical_fluid_power, classical_fluid_tau_z
 from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients as eytan_friction_coefficients
 from quadrupole_fluxes import classical_quadrupole_flux_normalized
-from single_perturber_classic import (
+from single_perturber_classical import (
     single_perturber_force_y,
     single_perturber_power,
     single_perturber_tau_z,
@@ -395,4 +382,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -1,20 +1,3 @@
-"""General quadrupole-approximation flux calculators.
-
-This module implements the Bessel-expression quadrupole sums without setting
-``n0 = 0``.
-
-The normalized helpers match the numerical calculators:
-
-Classical fluid:
-    ``P/(2*rho_bar*M**2/c_s)`` and
-    ``tau_z*tildeOmega/(2*rho_bar*M**2/c_s)``,
-    with ``A = a*tildeOmega/c_s``.
-
-Quantum/SP fluid with ``c_S=0``:
-    ``P/(2*rho_bar*M**2*m_phi/sqrt(Omega))`` and
-    ``tau_z*tildeOmega/(2*rho_bar*M**2*m_phi/sqrt(Omega))``,
-    with ``Omega = 2*m_phi*tildeOmega`` and ``A = a*sqrt(Omega)``.
-"""
 
 from __future__ import annotations
 
@@ -28,7 +11,7 @@ from typing import Literal
 import numpy as np
 from scipy.special import jv, jvp
 
-from classic_fluid_power import mass_fractions_from_nu
+from classical_fluid_power import mass_fractions_from_nu
 
 
 Medium = Literal["classical", "quantum"]
@@ -80,7 +63,6 @@ def quadrupole_invariants_direct(
     a: float = 1.0,
     n_xi: int = 32768,
 ) -> tuple[float, float]:
-    """Return ``(S_n, L_n)`` by direct xi quadrature."""
 
     if n < 1:
         raise ValueError("n must be at least 1")
@@ -126,11 +108,6 @@ def quadrupole_invariants(
     e_small: float = 1.0e-6,
     n_xi: int = 32768,
 ) -> tuple[float, float]:
-    """Return the real quadrupole invariants ``(S_n, L_n)``.
-
-    ``S_n`` and ``L_n`` include the factor ``a**4``.  For ``e < e_small`` the
-    circular fallback is used to avoid cancellation in the Bessel formula.
-    """
 
     if n < 1:
         raise ValueError("n must be at least 1")
@@ -272,7 +249,6 @@ def quadrupole_flux_normalized(
     strict_convergence: bool = True,
     warning_ak: float = 0.3,
 ) -> QuadrupoleFluxResult:
-    """Compute normalized ``P`` and ``tau_z*tildeOmega`` in the quadrupole approximation."""
 
     _validate_nu_e_n0_A(nu=nu, e=e, n0=n0, A=A)
     if medium not in ("classical", "quantum"):
@@ -396,7 +372,6 @@ def classical_quadrupole_flux_physical(
     n0: float | None = None,
     **kwargs,
 ) -> tuple[float, float, QuadrupoleFluxResult]:
-    """Return physical ``(P, tau_z, normalized_result)`` for the classical fluid."""
 
     if c_s <= 0.0 or Omega_phys <= 0.0:
         raise ValueError("c_s and Omega_phys must be positive")
@@ -429,7 +404,6 @@ def quantum_quadrupole_flux_physical(
     n0: float | None = None,
     **kwargs,
 ) -> tuple[float, float, QuadrupoleFluxResult]:
-    """Return physical ``(P, tau_z, normalized_result)`` for the quantum/SP fluid."""
 
     if m_phi <= 0.0 or Omega_phys <= 0.0:
         raise ValueError("m_phi and Omega_phys must be positive")

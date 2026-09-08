@@ -1,4 +1,3 @@
-"""Kepler-orbit arrays and fixed-mean-anomaly eccentricity derivatives."""
 
 from __future__ import annotations
 
@@ -11,11 +10,6 @@ import numpy as np
 
 @dataclass(frozen=True)
 class BinaryOrbit:
-    """A prescribed Kepler binary in the medium rest frame.
-
-    The public frequency is physical ``omega_tilde``.  When omitted, it is
-    fixed by the Newtonian relation ``omega_tilde**2 = M/a**3``.
-    """
 
     m1: float
     m2: float
@@ -66,7 +60,6 @@ class BinaryOrbit:
 
 @dataclass(frozen=True)
 class KeplerGrid:
-    """Cached quantities on a uniform mean-anomaly grid."""
 
     ell: np.ndarray
     xi: np.ndarray
@@ -81,7 +74,6 @@ def _power_of_two(value: int) -> bool:
 
 @lru_cache(maxsize=64)
 def cached_kepler_grid(e: float, n_ell: int) -> KeplerGrid:
-    """Solve Kepler's equation on a periodic, uniform mean-anomaly grid."""
 
     if not (0.0 <= e < 1.0):
         raise ValueError("e must satisfy 0 <= e < 1")
@@ -126,10 +118,6 @@ def cached_kepler_grid(e: float, n_ell: int) -> KeplerGrid:
 
 
 def relative_orbit_arrays(orbit: BinaryOrbit, n_ell: int) -> tuple[KeplerGrid, np.ndarray, np.ndarray]:
-    """Return ``(grid, X, X_e)`` at fixed mean anomaly.
-
-    ``X_e`` is ``partial_e X|_ell`` and is analytic, not a finite difference.
-    """
 
     grid = cached_kepler_grid(float(orbit.e), int(n_ell))
     beta = math.sqrt(1.0 - orbit.e * orbit.e)
@@ -149,7 +137,6 @@ def relative_orbit_arrays(orbit: BinaryOrbit, n_ell: int) -> tuple[KeplerGrid, n
 
 
 def orbit_at_eccentric_anomaly(orbit: BinaryOrbit, xi: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Return relative position and mean anomaly for arbitrary ``xi`` values."""
 
     beta = math.sqrt(1.0 - orbit.e * orbit.e)
     position = np.stack(

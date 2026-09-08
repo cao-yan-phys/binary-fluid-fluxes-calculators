@@ -1,4 +1,3 @@
-"""Point-source real-space engine for conservative periastron precession."""
 
 from __future__ import annotations
 
@@ -381,7 +380,6 @@ def _classical_self_gravity_closed_correction(
     fluid: ClassicalFluid,
     config: "PrecessionConfig",
 ) -> "PrecessionResult":
-    """Sum the acoustic reference exactly and harmonically correct self-gravity."""
 
     from .periastron_precession import HarmonicContribution
 
@@ -581,7 +579,6 @@ def calculate_precession_analytic(
     medium: ConservativeMedium,
     config: "PrecessionConfig",
 ) -> "PrecessionResult":
-    """Calculate the point-source conservative response in real space."""
 
     if config.source_size != 0.0:
         raise ValueError("analytic_realspace is point-source only; use engine='legacy_kspace_validation' for a finite source window")

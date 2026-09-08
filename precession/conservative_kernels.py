@@ -1,4 +1,3 @@
-"""Real conservative principal-value response kernels."""
 
 from __future__ import annotations
 
@@ -35,11 +34,6 @@ def _validate_common(rho_bar: float, response_prescription: str) -> None:
 
 @dataclass(frozen=True)
 class ClassicalFluid:
-    """Classical-fluid conservative response parameters.
-
-    With self-gravity on, this defines a time-symmetric PV prescription in an
-    infinite Jeans-unstable background; it is not a stationary retarded wake.
-    """
 
     rho_bar: float
     c_s: float
@@ -72,7 +66,6 @@ class ClassicalFluid:
 
 @dataclass(frozen=True)
 class QuantumFluid:
-    """Physical-time response of a Schrodinger-Poisson quantum fluid."""
 
     rho_bar: float
     m_phi: float
@@ -122,13 +115,11 @@ class QuantumFluid:
 
 
 def radial_measure_prefactor(medium: ConservativeMedium) -> float:
-    """Return `(4*pi)^2 rho_bar/(2*pi)^3` after the `k^2` measure cancels."""
 
     return medium.response_strength / (2.0 * math.pi) ** 3
 
 
 def static_ir_is_prescription_dependent(medium: ConservativeMedium) -> bool:
-    """Identify the unregulated pure-quantum-pressure static limit."""
 
     return (
         isinstance(medium, QuantumFluid)

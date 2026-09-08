@@ -1,4 +1,3 @@
-"""Exact point-source real-space conservative response kernels."""
 
 from __future__ import annotations
 
@@ -20,7 +19,6 @@ def _array_radius(radius: np.ndarray | float) -> np.ndarray:
 
 
 def classical_g_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray | float) -> np.ndarray:
-    """Exact point-source kernel ``g_n(r)`` for a classical fluid."""
 
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
@@ -42,7 +40,6 @@ def classical_g_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray | floa
 
 
 def classical_gprime_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray | float) -> np.ndarray:
-    """Radial derivative of the exact point-source kernel for a classical fluid."""
 
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
@@ -65,7 +62,6 @@ def classical_gprime_n(fluid: ClassicalFluid, omega: float, radius: np.ndarray |
 
 
 def quantum_g_n(fluid: QuantumFluid, omega: float, radius: np.ndarray | float) -> np.ndarray:
-    """Exact finite-frequency quantum-fluid point-source kernel."""
 
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
@@ -89,7 +85,6 @@ def quantum_g_n(fluid: QuantumFluid, omega: float, radius: np.ndarray | float) -
 
 
 def quantum_gprime_n(fluid: QuantumFluid, omega: float, radius: np.ndarray | float) -> np.ndarray:
-    """Radial derivative of the exact finite-frequency quantum-fluid kernel."""
 
     r = _array_radius(radius)
     a_value = fluid.a_n(omega)
@@ -115,7 +110,6 @@ def quantum_gprime_n(fluid: QuantumFluid, omega: float, radius: np.ndarray | flo
 
 
 def quantum_static_no_sg_finite_cs_g(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
-    """Static quantum-fluid kernel without self-gravity and with positive ``c_S^2``."""
 
     c_S_squared = fluid.c_S_squared
     if fluid.include_self_gravity or c_S_squared <= 0.0:
@@ -133,7 +127,6 @@ def quantum_static_no_sg_finite_cs_g(fluid: QuantumFluid, radius: np.ndarray | f
 
 
 def quantum_static_no_sg_finite_cs_gprime(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
-    """Analytic radial derivative of the finite-``c_S`` static quantum-fluid kernel."""
 
     c_S_squared = fluid.c_S_squared
     if fluid.include_self_gravity or c_S_squared <= 0.0:
@@ -153,12 +146,6 @@ def quantum_static_no_sg_finite_cs_gprime(fluid: QuantumFluid, radius: np.ndarra
 
 
 def quantum_static_no_sg_negative_cs2_g(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
-    """Finite, orbit-dependent static kernel for negative ``c_S^2``.
-
-    The ``A_0 -> 0`` kernel contains an additive infrared constant.  It
-    drops out of the eccentricity derivative, so this function returns the
-    uniquely relevant finite part.
-    """
 
     c_S_squared = fluid.c_S_squared
     if fluid.include_self_gravity or c_S_squared >= 0.0:
@@ -179,7 +166,6 @@ def quantum_static_no_sg_negative_cs2_g(fluid: QuantumFluid, radius: np.ndarray 
 
 
 def quantum_static_no_sg_negative_cs2_gprime(fluid: QuantumFluid, radius: np.ndarray | float) -> np.ndarray:
-    """Derivative of the finite negative-``c_S^2`` static kernel."""
 
     c_S_squared = fluid.c_S_squared
     if fluid.include_self_gravity or c_S_squared >= 0.0:

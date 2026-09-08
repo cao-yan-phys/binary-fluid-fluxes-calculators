@@ -1,26 +1,10 @@
-"""Quadrupole-order approximation for the classical-fluid n0=0 binary fluxes.
-
-The normalized helpers match the conventions used by the numerical
-calculators:
-
-    P_norm = P / (2*rho_bar*M**2/c_s)
-    tauOmega_norm = tau_z*tildeOmega / (2*rho_bar*M**2/c_s)
-
-with the dimensionless parameter `A = a*tildeOmega/c_s`.  In these variables
-the n0=0 quadrupole approximation is
-
-    P_norm = (2*pi/15) * nu**2 * A**4
-        * [7*sqrt(1-e**2) - 3*(1-e**2)] / (1-e**2)
-
-    tauOmega_norm = (8*pi/15) * nu**2 * A**4 * sqrt(1-e**2).
-"""
 
 from __future__ import annotations
 
 import argparse
 import math
 
-from classic_fluid_power import mass_fractions_from_nu
+from classical_fluid_power import mass_fractions_from_nu
 
 
 def _validate_nu_e_A(nu: float, e: float, A: float) -> None:
@@ -32,7 +16,6 @@ def _validate_nu_e_A(nu: float, e: float, A: float) -> None:
 
 
 def classical_quadrupole_power_eccentricity_factor(e: float) -> float:
-    """Return `[7 sqrt(1-e^2) - 3(1-e^2)]/(1-e^2)`."""
 
     if not (0.0 <= e < 1.0):
         raise ValueError("e must satisfy 0 <= e < 1")
@@ -41,10 +24,6 @@ def classical_quadrupole_power_eccentricity_factor(e: float) -> float:
 
 
 def classical_quadrupole_power_normalized(*, nu: float, e: float, A: float) -> float:
-    """Return the normalized n0=0 quadrupole power.
-
-    The returned value is `P/(2*rho_bar*M**2/c_s)`.
-    """
 
     _validate_nu_e_A(nu, e, A)
     return (
@@ -62,10 +41,6 @@ def classical_quadrupole_tau_z_tildeOmega_normalized(
     e: float,
     A: float,
 ) -> float:
-    """Return the normalized n0=0 quadrupole z-torque.
-
-    The returned value is `tau_z*tildeOmega/(2*rho_bar*M**2/c_s)`.
-    """
 
     _validate_nu_e_A(nu, e, A)
     return (
@@ -87,7 +62,6 @@ def classical_quadrupole_power_physical(
     rho_bar: float,
     c_s: float,
 ) -> float:
-    """Return the physical quadrupole power from the user's formula."""
 
     mass_fractions_from_nu(nu)
     if not (0.0 <= e < 1.0):
@@ -118,7 +92,6 @@ def classical_quadrupole_tau_z_physical(
     rho_bar: float,
     c_s: float,
 ) -> float:
-    """Return the physical quadrupole z-torque from the user's formula."""
 
     mass_fractions_from_nu(nu)
     if not (0.0 <= e < 1.0):

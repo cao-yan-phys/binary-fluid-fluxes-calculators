@@ -1,4 +1,3 @@
-"""CUDA reductions for point-source real-space classical corrections."""
 
 from __future__ import annotations
 
@@ -113,7 +112,6 @@ def _classical_self_gravity_correction_kernel(
 
 
 class CudaClassicalSelfGravityCorrection:
-    """Cached GPU geometry for the classical self-gravity correction sum."""
 
     def __init__(self, geometry: PairOrbitGeometry) -> None:
         pairs = tuple(geometry.pairs[key] for key in ((0, 0), (0, 1), (1, 0), (1, 1)))
@@ -130,7 +128,6 @@ class CudaClassicalSelfGravityCorrection:
         self._n_points = delta.size
 
     def correction_parts(self, n: int, omega: float, rho_bar: float, c_s: float) -> np.ndarray:
-        """Return the double-average correction before its frequency weight."""
 
         self._d_output.copy_to_device(np.zeros(4, dtype=np.float64))
         work_items = 4 * self._n_points
@@ -270,7 +267,6 @@ def _quantum_pair_average_kernel(
 
 
 class CudaQuantumPairAverage:
-    """Cached GPU geometry for quantum-fluid real-space harmonic averages."""
 
     def __init__(self, geometry: PairOrbitGeometry) -> None:
         pairs = tuple(geometry.pairs[key] for key in ((0, 0), (0, 1), (1, 0), (1, 1)))
@@ -295,7 +291,6 @@ class CudaQuantumPairAverage:
         c_s_squared: float,
         include_self_gravity: bool,
     ) -> np.ndarray:
-        """Return the double average before its static or harmonic weight."""
 
         static_mode = 0
         if n == 0 and not include_self_gravity:

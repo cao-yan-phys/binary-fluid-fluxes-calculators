@@ -1,4 +1,3 @@
-"""Shared arbitrary-wave-vector source harmonics for conservative precession."""
 
 from __future__ import annotations
 
@@ -16,7 +15,6 @@ Backend = Literal["auto", "cuda", "cpu"]
 
 
 def cuda_available() -> bool:
-    """Return whether the Numba CUDA backend is usable."""
 
     try:
         return bool(cuda.is_available())
@@ -37,7 +35,6 @@ def _quadratic_parts_cuda_kernel(
     f2: float,
     output: np.ndarray,
 ) -> None:
-    """Accumulate weighted Re[K* K_e] source parts for one (n, k)."""
 
     index = cuda.grid(1)
     n_angles = directions.shape[0]
@@ -121,7 +118,6 @@ def _quadratic_parts_cuda_kernel(
 
 
 class CudaQuadraticSource:
-    """GPU evaluator for angular source quadratic forms at arbitrary radial k."""
 
     def __init__(self, source: "OffshellSource", directions: np.ndarray, weights: np.ndarray) -> None:
         if not cuda_available():
@@ -140,12 +136,10 @@ class CudaQuadraticSource:
         self._threads_per_block = 128
 
     def quadratic_parts(self, n: int, k: float) -> np.ndarray:
-        """Return angular integral of total/self-1/self-2/cross source parts."""
 
         return self.quadratic_parts_many(n, np.array((k,), dtype=np.float64))[0]
 
     def quadratic_parts_many(self, n: int, k_values: np.ndarray) -> np.ndarray:
-        """Evaluate a batch of radial wave numbers in one CUDA launch."""
 
         k_values = np.ascontiguousarray(np.asarray(k_values, dtype=np.float64))
         if k_values.ndim != 1:
@@ -174,12 +168,6 @@ class CudaQuadraticSource:
 
 @dataclass(frozen=True)
 class SourceHarmonic:
-    """One harmonic and its analytic eccentricity derivative.
-
-    The ``body_1`` and ``body_2`` fields include the corresponding mass
-    fractions.  ``cross`` quantities are formed by callers from the two
-    components, preserving the self/cross decomposition exactly.
-    """
 
     total: complex
     total_e: complex
@@ -191,7 +179,6 @@ class SourceHarmonic:
 
 @dataclass(frozen=True)
 class SourceSpectrum:
-    """All nonnegative FFT coefficients at a fixed wave vector."""
 
     total: np.ndarray
     total_e: np.ndarray
@@ -202,15 +189,6 @@ class SourceSpectrum:
 
 
 class OffshellSource:
-    """FFT source core using a uniform mean-anomaly grid.
-
-    It implements the convention
-
-    ``K_n(k) = <exp(+i*n*ell) S(ell,k)>``.
-
-    NumPy's inverse FFT has precisely this positive-exponent convention when
-    evaluated on the uniform mean-anomaly grid.
-    """
 
     def __init__(self, orbit: BinaryOrbit, n_ell: int = 256) -> None:
         if n_ell < 16 or n_ell & (n_ell - 1):
@@ -220,7 +198,6 @@ class OffshellSource:
         self.grid, self.position, self.position_e = relative_orbit_arrays(orbit, n_ell)
 
     def spectrum(self, k_vector: np.ndarray) -> SourceSpectrum:
-        """Return all nonnegative harmonics at arbitrary ``k``."""
 
         k_vector = np.asarray(k_vector, dtype=np.float64)
         if k_vector.shape != (3,):
@@ -246,7 +223,6 @@ class OffshellSource:
         )
 
     def harmonic(self, n: int, k_vector: np.ndarray) -> SourceHarmonic:
-        """Return ``K_n`` and ``K_n,e`` for one nonnegative harmonic."""
 
         if n < 0 or n > self.n_ell // 2:
             raise ValueError("n must satisfy 0 <= n <= n_ell/2")
@@ -261,7 +237,6 @@ class OffshellSource:
         )
 
     def direct_xi_harmonic(self, n: int, k_vector: np.ndarray, n_xi: int | None = None) -> SourceHarmonic:
-        """Independent eccentric-anomaly quadrature used only for regression tests."""
 
         if n < 0:
             raise ValueError("n must be non-negative")
@@ -313,7 +288,6 @@ class OffshellSource:
         return SourceHarmonic(k1 + k2, k1e + k2e, k1, k1e, k2, k2e)
 
     def on_shell_harmonic(self, n: int, k: float, direction: np.ndarray) -> SourceHarmonic:
-        """On-shell wrapper retained for flux-source regression tests."""
 
         direction = np.asarray(direction, dtype=np.float64)
         if direction.shape != (3,):
@@ -324,7 +298,6 @@ class OffshellSource:
         return self.harmonic(n, float(k) * direction)
 
     def cuda_quadratic_source(self, directions: np.ndarray, weights: np.ndarray) -> CudaQuadraticSource:
-        """Create a reusable CUDA angular evaluator for this source grid."""
 
         directions = np.asarray(directions, dtype=np.float64)
         weights = np.asarray(weights, dtype=np.float64)
@@ -336,7 +309,6 @@ class OffshellSource:
 
 
 def source_quadratic_parts(value: SourceHarmonic) -> np.ndarray:
-    """Return total, self-1, self-2, and cross ``Re[K^* K_e]`` parts."""
 
     total = float(np.real(np.conj(value.total) * value.total_e))
     self_1 = float(np.real(np.conj(value.body_1) * value.body_1_e))

@@ -1,16 +1,3 @@
-"""Paper Fig. 3: classical fluxes for eccentric binaries with nu=0.2.
-
-The figure has three panels for normalized P, tau_z, and -F_y versus Mach
-number.  The line color labels eccentricity.
-Solid lines are n0=0 and dashed lines are n0=1.
-
-The point-source UV threshold is
-
-    Mcrit(e, nu) = sqrt((1 - e)/(1 + e)) / max(m1/M, m2/M).
-
-Curves are evaluated only below this threshold; same-color vertical dotted
-lines mark the threshold locations.
-"""
 
 from __future__ import annotations
 
@@ -32,9 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from classic_fluid_force_y import classical_fluid_force_y
-from classic_fluid_power import classical_fluid_power
-from classic_fluid_tau_z import classical_fluid_tau_z
+from classical_fluid import classical_fluid_force_y, classical_fluid_power, classical_fluid_tau_z
 
 
 def parse_args() -> argparse.Namespace:

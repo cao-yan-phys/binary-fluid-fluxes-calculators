@@ -1,4 +1,3 @@
-"""Cached pair geometry on a uniform mean-anomaly grid."""
 
 from __future__ import annotations
 
@@ -11,7 +10,6 @@ from .orbit_derivatives import BinaryOrbit, KeplerGrid, relative_orbit_arrays
 
 @dataclass(frozen=True)
 class PairGeometry:
-    """Separation and fixed-mean-anomaly eccentricity derivative for one pair."""
 
     separation: np.ndarray
     separation_e: np.ndarray
@@ -19,7 +17,6 @@ class PairGeometry:
 
 @dataclass(frozen=True)
 class PairOrbitGeometry:
-    """All four center-of-mass pair geometries for a binary orbit."""
 
     grid: KeplerGrid
     delta: np.ndarray
@@ -31,12 +28,6 @@ class PairOrbitGeometry:
         radial_derivative: callable,
         phase: np.ndarray | float = 1.0,
     ) -> np.ndarray:
-        """Return total, body-1, body-2, and cross pair contributions.
-
-        ``radial_derivative`` is evaluated separately on every pair separation,
-        so the cross term is accumulated directly rather than reconstructed by
-        subtraction.
-        """
 
         fractions = self.mass_fractions
         parts = np.zeros(4, dtype=np.float64)
@@ -57,7 +48,6 @@ class PairOrbitGeometry:
 
 
 def build_pair_orbit_geometry(orbit: BinaryOrbit, n_ell: int) -> PairOrbitGeometry:
-    """Build reusable pair matrices and analytic ``partial_e r`` values."""
 
     grid, position, position_e = relative_orbit_arrays(orbit, n_ell)
     alpha = (orbit.f2, -orbit.f1)

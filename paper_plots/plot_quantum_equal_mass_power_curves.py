@@ -1,17 +1,3 @@
-"""Smooth circular equal-mass quantum-fluid power curves.
-
-For ``nu=1/4`` and ``e=0`` the quantum-fluid power reduces to a one-dimensional
-Bessel sum over even harmonics,
-
-    P_hat = sum_even_n n/(n^2+n0^2)^(3/4)
-            int dOmega J_n(beta_n sin(theta))^2,
-
-where ``P_hat = P/(2*rho_bar*M^2*m_phi/sqrt(Omega))`` and
-``beta_n = (A/2) * (n^2+n0^2)^(1/4)`` with ``A = a*sqrt(Omega)``.
-
-The script uses this circular reduction for smooth numerical curves and overlays
-the general quantum quadrupole approximation as sparse points.
-"""
 
 from __future__ import annotations
 
@@ -52,7 +38,6 @@ def circular_equal_mass_power(
     tail_window: int = 24,
     consecutive_windows: int = 2,
 ) -> dict[str, float | int | bool]:
-    """Return normalized equal-mass circular quantum power with convergence info."""
 
     if A <= 0.0:
         raise ValueError("A must be positive")
@@ -114,7 +99,6 @@ def circular_equal_mass_power(
 
 
 def mach_grid() -> np.ndarray:
-    """A compact but denser-at-large-M grid for smooth curves."""
 
     low = np.linspace(0.30, 4.80, 16)
     mid = np.linspace(5.00, 20.00, 61)

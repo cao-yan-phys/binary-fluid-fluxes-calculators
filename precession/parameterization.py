@@ -1,4 +1,3 @@
-"""Flux-compatible dimensionless parameter adapters for conservative precession."""
 
 from __future__ import annotations
 
@@ -37,11 +36,6 @@ def classical_precession_flux_parameters(
     include_self_gravity: bool = True,
     config: PrecessionConfig | None = None,
 ) -> PrecessionResult:
-    """Calculate precession for a classical fluid using only ``(nu,e,n0,A)``.
-
-    The result is invariant under the arbitrary dimensional representative
-    used internally.  No orbital scale is an additional input.
-    """
 
     if n0 < 0.0:
         raise ValueError("n0 must be non-negative")
@@ -78,13 +72,6 @@ def quantum_precession_flux_parameters(
     include_self_gravity: bool = True,
     config: PrecessionConfig | None = None,
 ) -> PrecessionResult:
-    """Calculate quantum-fluid precession using only ``(nu,e,n0,A,S)``.
-
-    Here ``S=c_S^2/Omega`` is exactly the quantum-fluid input used by the
-    flux calculators.  The result is
-    invariant under the dimensional representative used internally; no orbital
-    scale is an additional input.
-    """
 
     if n0 < 0.0:
         raise ValueError("n0 must be non-negative")

@@ -1,13 +1,3 @@
-"""Paper Fig. 3 quantum-fluid counterpart for eccentric binaries with nu=0.2.
-
-Three panels show the normalized quantum-fluid energy flux, angular-momentum flux, and y-component of linear-momentum flux
-component versus
-
-    M_Q = A = a*sqrt(Omega).
-
-The line color labels eccentricity, solid lines are ``n0=0``, and dashed
-lines are ``n0=1``.
-"""
 
 from __future__ import annotations
 
@@ -29,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from classic_fluid_power import build_quadrature, mass_fractions_from_nu, recommended_n_xi
+from classical_fluid_power import build_quadrature, mass_fractions_from_nu, recommended_n_xi
 from quantum_fluid import (
     _compute_quantum_terms_cpu,
     _compute_quantum_terms_cuda,
@@ -71,7 +61,6 @@ def parse_args() -> argparse.Namespace:
 
 
 def mach_grid(mach_min: float, mach_max: float, num_mach: int) -> np.ndarray:
-    """Return a compact grid with a little more support above M_Q~5."""
 
     if num_mach < 8:
         raise ValueError("num_mach must be at least 8")
@@ -100,7 +89,6 @@ def quantum_power_tau_force(
     consecutive_windows: int,
     xi_per_n: int,
 ) -> dict[str, float | int | bool | str]:
-    """Compute quantum P, tau_z, and F_y on the same harmonic/angular grid."""
 
     q1, q2 = mass_fractions_from_nu(nu)
     sqrt_one_minus_e2 = math.sqrt(1.0 - e * e)

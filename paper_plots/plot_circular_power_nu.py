@@ -1,16 +1,3 @@
-"""Circular-orbit classical power for several symmetric mass ratios.
-
-The plotted numerical curves use the binary calculator normalization
-
-    P_hat = P / (2 rho_bar M^2 / c_s).
-
-For reference markers:
-
-* black points are the equal-mass n0=0 closed form supplied by the user;
-* blue points are the subsonic fixed-center single-perturber closed form,
-  scaled by ``single_nu_scale**2`` to put it on the same total-mass
-  normalization.
-"""
 
 from __future__ import annotations
 
@@ -34,7 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import brentq
 
-from classic_fluid_power import classical_fluid_power
+from classical_fluid import classical_fluid_power
 
 
 def parse_args() -> argparse.Namespace:
@@ -81,7 +68,6 @@ def circular_uv_mach_limit(nu: float) -> float:
 
 
 def equal_mass_analytic_power_hat(A: float) -> float:
-    """User's equal-mass circular n0=0 closed form in P_hat units."""
 
     component_mach = 0.5 * A
     if not (0.0 < component_mach < 1.0):
@@ -98,12 +84,6 @@ def equal_mass_analytic_power_hat(A: float) -> float:
 
 
 def single_perturber_analytic_power_hat(mach: float, nu_scale: float) -> float:
-    """Subsonic fixed-center single-perturber circular closed form.
-
-    The native fixed-center result is normalized by the perturber mass squared.
-    Multiplication by ``nu_scale**2`` maps it to the binary total-mass
-    normalization for an EMRI reference scale.
-    """
 
     if not (0.0 < mach < 1.0):
         raise ValueError("single-perturber analytic formula requires 0 < Mach < 1")

@@ -1,4 +1,3 @@
-"""Independent finite-resolution force reconstruction and Gauss projection."""
 
 from __future__ import annotations
 
@@ -16,7 +15,6 @@ from .principal_value import principal_value_integral
 
 @dataclass(frozen=True)
 class GaussBenchmarkResult:
-    """Finite-resolution reconstructed-field Gauss-projection benchmark result."""
 
     delta_varpi_static: float | None
     delta_varpi_osc: float
@@ -33,12 +31,6 @@ def gauss_precession_benchmark(
     *,
     n_time: int = 64,
 ) -> GaussBenchmarkResult:
-    """Reconstruct a regulated real conservative field and apply Gauss' formula.
-
-    This intentionally follows a different route from the Hamiltonian
-    eccentricity derivative. It is intended for modest-resolution validation
-    points and applies the same source window to both source and test factors.
-    """
 
     if orbit.e <= 0.0:
         raise ValueError("Gauss periastron benchmark requires e > 0")

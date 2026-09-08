@@ -1,4 +1,3 @@
-"""Small usage example for the binary fluid calculators."""
 
 from __future__ import annotations
 
@@ -9,9 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from classic_fluid_force_y import classical_fluid_force_y
-from classic_fluid_power import classical_fluid_power
-from classic_fluid_tau_z import classical_fluid_tau_z
+from classical_fluid import classical_fluid_force_y, classical_fluid_power, classical_fluid_tau_z
 from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients
 from quadrupole_fluxes import quantum_quadrupole_flux_normalized
 from quantum_fluid import quantum_fluid_force_y, quantum_fluid_power, quantum_fluid_tau_z
@@ -38,10 +35,10 @@ def compact_kwargs(**overrides):
 
 
 def main() -> None:
-    classic_common = compact_kwargs(A=0.5)
-    p_classic = classical_fluid_power(**classic_common)
-    tau_classic = classical_fluid_tau_z(**classic_common)
-    fy_classic = classical_fluid_force_y(**classic_common)
+    classical_common = compact_kwargs(A=0.5)
+    p_classical = classical_fluid_power(**classical_common)
+    tau_classical = classical_fluid_tau_z(**classical_common)
+    fy_classical = classical_fluid_force_y(**classical_common)
 
     quantum_common = compact_kwargs(A=2.0)
     p_quantum = quantum_fluid_power(**quantum_common)
@@ -65,10 +62,10 @@ def main() -> None:
     )
 
     print("Classical normalized fluxes")
-    print(f"  P_hat       = {p_classic.value:.8e}")
-    print(f"  tau_hat     = {tau_classic.value:.8e}")
-    print(f"  F_y_hat     = {fy_classic.value:.8e}")
-    print(f"  converged   = {p_classic.converged}, n={int(p_classic.n_values[-1])}")
+    print(f"  P_hat       = {p_classical.value:.8e}")
+    print(f"  tau_hat     = {tau_classical.value:.8e}")
+    print(f"  F_y_hat     = {fy_classical.value:.8e}")
+    print(f"  converged   = {p_classical.converged}, n={int(p_classical.n_values[-1])}")
 
     print("\nQuantum normalized fluxes")
     print(f"  P_hat       = {p_quantum.value:.8e}")

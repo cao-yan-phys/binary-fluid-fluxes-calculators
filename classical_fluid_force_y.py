@@ -1,72 +1,38 @@
-"""Calculator for the classical-fluid normalized power.
-
-The returned value is
-
-    P / (2 * rho_bar * M**2 / c_s)
-
-using the implemented normalized harmonic expression.  The harmonic sum is
-evaluated until an internal tail-convergence criterion is satisfied.  The CUDA
-backend uses Numba and falls back to the CPU backend when CUDA is unavailable.
-"""
 
 from __future__ import annotations
 
 import argparse
 import math
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
 from numba import cuda, njit, prange
 
-
-TWO_PI = 2.0 * math.pi
-DEFAULT_MAX_N = 4096
-DEFAULT_RTOL = 1.0e-8
-DEFAULT_TAIL_WINDOW = 32
-DEFAULT_CONSECUTIVE_WINDOWS = 3
+from classical_fluid_power import (
+    DEFAULT_CONSECUTIVE_WINDOWS,
+    DEFAULT_MAX_N,
+    DEFAULT_RTOL,
+    DEFAULT_TAIL_WINDOW,
+    TWO_PI,
+    ClassicalFluidResult,
+    ConvergenceError,
+    DivergenceError,
+    build_quadrature,
+    mass_fractions_from_nu,
+    recommended_n_xi,
+    speed_threshold_ratio,
+)
 
 
 Backend = Literal["auto", "cuda", "cpu"]
 
 
-class ConvergenceError(RuntimeError):
-    """Raised when the harmonic sum does not converge before the safety cap."""
-
-
-class DivergenceError(RuntimeError):
-    """Raised when parameters satisfy the large-n speed divergence criterion."""
-
-
-@dataclass(frozen=True)
-class ClassicalFluidResult:
-    """Container for the normalized power and per-harmonic terms."""
-
-    value: float
-    n_values: np.ndarray
-    terms: np.ndarray
-    backend: str
-    converged: bool
-    tail_sum: float
-    tail_ratio: float
-    parameters: dict[str, float | int | str | bool | None]
-
-
-def mass_fractions_from_nu(nu: float) -> tuple[float, float]:
-    """Return `(m1/M, m2/M)` from the dimensionless symmetric mass ratio."""
-
-    if not (0.0 < nu <= 0.25):
-        raise ValueError("nu must satisfy 0 < nu <= 1/4 for nu = m1*m2/M^2")
-    delta = math.sqrt(max(0.0, 1.0 - 4.0 * nu))
-    return 0.5 * (1.0 + delta), 0.5 * (1.0 - delta)
-
-
-def speed_threshold_ratio(nu: float, e: float, A: float) -> float:
-    """Return q_max * A * sqrt((1+e)/(1-e)) for the barycentric sources."""
-
-    q1, q2 = mass_fractions_from_nu(nu)
-    return max(q1, q2) * A * math.sqrt((1.0 + e) / (1.0 - e))
+def _cuda_available() -> bool:
+    try:
+        return bool(cuda.is_available())
+    except Exception:
+        return False
 
 
 def _validate_inputs(
@@ -97,43 +63,8 @@ def _validate_inputs(
         raise ValueError("n_phi must be at least 4")
 
 
-def recommended_n_xi(n_max: int, xi_per_n: int = 12, minimum: int = 512) -> int:
-    """A conservative default for the oscillatory `xi` integral."""
-
-    if n_max < 1:
-        raise ValueError("n_max must be at least 1")
-    if xi_per_n < 2:
-        raise ValueError("xi_per_n must be at least 2")
-    return max(minimum, int(xi_per_n * n_max))
-
-
-def build_quadrature(
-    n_xi: int,
-    n_mu: int,
-    n_phi: int,
-    e: float,
-) -> tuple[np.ndarray, ...]:
-    """Build quadrature nodes and cached trigonometric arrays."""
-
-    mu, w_mu = np.polynomial.legendre.leggauss(n_mu)
-    phi = TWO_PI * (np.arange(n_phi, dtype=np.float64) + 0.5) / n_phi
-    xi = TWO_PI * np.arange(n_xi, dtype=np.float64) / n_xi
-    cos_xi = np.cos(xi)
-    sin_xi = np.sin(xi)
-    xi_minus_e_sin_xi = xi - e * sin_xi
-    return (
-        mu.astype(np.float64),
-        w_mu.astype(np.float64),
-        np.cos(phi).astype(np.float64),
-        np.sin(phi).astype(np.float64),
-        cos_xi.astype(np.float64),
-        sin_xi.astype(np.float64),
-        xi_minus_e_sin_xi.astype(np.float64),
-    )
-
-
 @njit(parallel=True, fastmath=True)
-def _terms_cpu(
+def _force_y_terms_cpu(
     n_values: np.ndarray,
     mu: np.ndarray,
     w_mu: np.ndarray,
@@ -155,9 +86,9 @@ def _terms_cpu(
     phi_weight = TWO_PI / n_phi
 
     for i_n in prange(n_values.size):
-        n_int = n_values[i_n]
-        n_float = float(n_int)
-        dispersion = math.sqrt(1.0 + (n0 / n_float) * (n0 / n_float))
+        n_float = float(n_values[i_n])
+        ratio = n0 / n_float
+        dispersion = math.sqrt(1.0 + ratio * ratio)
         ak = A * n_float * dispersion
         harmonic_sum = 0.0
 
@@ -172,6 +103,7 @@ def _terms_cpu(
             for i_phi in range(n_phi):
                 cp = cos_phi[i_phi]
                 sp = sin_phi[i_phi]
+                y_component = sin_theta * sp
                 k_re = 0.0
                 k_im = 0.0
 
@@ -195,15 +127,20 @@ def _terms_cpu(
 
                 k_re /= n_xi
                 k_im /= n_xi
-                harmonic_sum += mu_weight * phi_weight * (k_re * k_re + k_im * k_im)
+                harmonic_sum += (
+                    mu_weight
+                    * phi_weight
+                    * y_component
+                    * (k_re * k_re + k_im * k_im)
+                )
 
-        out[i_n] = harmonic_sum / dispersion
+        out[i_n] = harmonic_sum
 
     return out
 
 
 @cuda.jit
-def _terms_cuda_kernel(
+def _force_y_terms_cuda_kernel(
     n_values,
     mu,
     w_mu,
@@ -246,6 +183,7 @@ def _terms_cuda_kernel(
     sin_theta = math.sqrt(sin_theta_sq)
     cp = cos_phi[i_phi]
     sp = sin_phi[i_phi]
+    y_component = sin_theta * sp
 
     k_re = 0.0
     k_im = 0.0
@@ -268,18 +206,13 @@ def _terms_cuda_kernel(
     k_re /= n_xi
     k_im /= n_xi
     phi_weight = TWO_PI / n_phi
-    contribution = w_mu[i_mu] * phi_weight * (k_re * k_re + k_im * k_im)
-    cuda.atomic.add(out, i_n, contribution / dispersion)
+    contribution = w_mu[i_mu] * phi_weight * y_component * (
+        k_re * k_re + k_im * k_im
+    )
+    cuda.atomic.add(out, i_n, contribution)
 
 
-def _cuda_available() -> bool:
-    try:
-        return bool(cuda.is_available())
-    except Exception:
-        return False
-
-
-def _compute_terms_cuda(
+def _compute_force_y_terms_cuda(
     n_values: np.ndarray,
     quadrature: tuple[np.ndarray, ...],
     *,
@@ -304,7 +237,7 @@ def _compute_terms_cuda(
     threads_per_block = 128
     total_threads = n_values.size * mu.size * cos_phi.size
     blocks = (total_threads + threads_per_block - 1) // threads_per_block
-    _terms_cuda_kernel[blocks, threads_per_block](
+    _force_y_terms_cuda_kernel[blocks, threads_per_block](
         d_n_values,
         d_mu,
         d_w_mu,
@@ -325,7 +258,7 @@ def _compute_terms_cuda(
     return d_out.copy_to_host()
 
 
-def _compute_terms_cpu(
+def _compute_force_y_terms_cpu(
     n_values: np.ndarray,
     quadrature: tuple[np.ndarray, ...],
     *,
@@ -336,7 +269,7 @@ def _compute_terms_cpu(
     A: float,
     n0: float,
 ) -> np.ndarray:
-    return _terms_cpu(
+    return _force_y_terms_cpu(
         n_values.astype(np.int32, copy=False),
         *quadrature,
         q1,
@@ -348,7 +281,7 @@ def _compute_terms_cpu(
     )
 
 
-def classical_fluid_power(
+def classical_fluid_force_y(
     *,
     nu: float,
     e: float,
@@ -368,17 +301,6 @@ def classical_fluid_power(
     speed_threshold_guard: bool = True,
     xi_per_n: int = 12,
 ) -> ClassicalFluidResult:
-    """Compute the normalized classical-fluid power.
-
-    Parameters are the dimensionless symmetric mass ratio `nu`, eccentricity
-    `e`, mass ratio `n0 = m/Omega`, and `A = a*Omega`.
-
-    The harmonic sum is automatically continued until the sum of the latest
-    `tail_window` positive terms is below `atol + rtol * total` for
-    `consecutive_windows` consecutive checks.  `n_max` is only a safety cap.  If
-    `strict_convergence` is true, reaching `n_max` without convergence raises
-    `ConvergenceError` instead of returning a silently truncated value.
-    """
 
     _validate_inputs(
         nu=nu,
@@ -404,6 +326,7 @@ def classical_fluid_power(
         raise ValueError("consecutive_windows must be at least 1")
     if xi_per_n < 2:
         raise ValueError("xi_per_n must be at least 2")
+
     threshold_ratio = speed_threshold_ratio(nu, e, A)
     if speed_threshold_guard and threshold_ratio >= 1.0:
         raise DivergenceError(
@@ -435,7 +358,9 @@ def classical_fluid_power(
     convergence_passes = 0
     max_n_xi_evaluated = 0
 
-    compute = _compute_terms_cuda if use_backend == "cuda" else _compute_terms_cpu
+    compute = (
+        _compute_force_y_terms_cuda if use_backend == "cuda" else _compute_force_y_terms_cpu
+    )
     for start in range(1, n_max + 1, chunk_size):
         stop = min(n_max, start + chunk_size - 1)
         n_values = np.arange(start, stop + 1, dtype=np.int32)
@@ -445,6 +370,7 @@ def classical_fluid_power(
             current_n_xi = recommended_n_xi(stop, xi_per_n=xi_per_n)
             quadrature = build_quadrature(current_n_xi, n_mu, n_phi, e)
         max_n_xi_evaluated = max(max_n_xi_evaluated, int(current_n_xi))
+
         terms = compute(
             n_values,
             quadrature,
@@ -457,12 +383,12 @@ def classical_fluid_power(
         )
         all_n.append(n_values.copy())
         all_terms.append(terms)
-        latest_chunk_sum = float(np.sum(terms))
-        total += latest_chunk_sum
+        latest_chunk_sum = float(np.sum(np.abs(terms)))
+        total += float(np.sum(terms))
 
         flat_terms = np.concatenate(all_terms)
         if flat_terms.size >= tail_window:
-            latest_window_sum = float(np.sum(flat_terms[-tail_window:]))
+            latest_window_sum = float(np.sum(np.abs(flat_terms[-tail_window:])))
             tail_sum = max(latest_window_sum, latest_chunk_sum)
             scale = max(abs(total), np.finfo(np.float64).tiny)
             threshold = atol + rtol * scale
@@ -479,7 +405,7 @@ def classical_fluid_power(
     term_values = np.concatenate(all_terms)
     if not math.isfinite(tail_sum):
         tail_count = min(tail_window, term_values.size)
-        latest_window_sum = float(np.sum(term_values[-tail_count:]))
+        latest_window_sum = float(np.sum(np.abs(term_values[-tail_count:])))
         tail_sum = max(latest_window_sum, latest_chunk_sum)
     if not math.isfinite(tail_ratio):
         scale = max(abs(float(np.sum(term_values))), np.finfo(np.float64).tiny)
@@ -487,8 +413,8 @@ def classical_fluid_power(
 
     if not converged and strict_convergence:
         raise ConvergenceError(
-            "harmonic sum did not converge before the safety cap "
-            f"n_max={n_max}; last tail_sum={tail_sum:.6e}, "
+            "F_y harmonic sum did not converge before the safety cap "
+            f"n_max={n_max}; last abs_tail_sum={tail_sum:.6e}, "
             f"tail_ratio={tail_ratio:.6e}, rtol={rtol:.6e}. "
             "Increase n_max/tail_window or loosen rtol if this is expected."
         )
@@ -502,6 +428,8 @@ def classical_fluid_power(
         tail_sum=tail_sum,
         tail_ratio=tail_ratio,
         parameters={
+            "quantity": "F_y_normalized",
+            "normalization": "F_y/(2*rho_bar*M^2/c_s^2)",
             "nu": float(nu),
             "m1_over_M": q1,
             "m2_over_M": q2,
@@ -521,8 +449,8 @@ def classical_fluid_power(
             "tail_window": int(tail_window),
             "consecutive_windows": int(consecutive_windows),
             "convergence_passes": int(convergence_passes),
-            "latest_window_sum": float(latest_window_sum),
-            "latest_chunk_sum": float(latest_chunk_sum),
+            "latest_abs_window_sum": float(latest_window_sum),
+            "latest_abs_chunk_sum": float(latest_chunk_sum),
             "speed_threshold_ratio": float(threshold_ratio),
             "speed_threshold_guard": bool(speed_threshold_guard),
         },
@@ -537,90 +465,43 @@ def _write_terms_csv(path: Path, result: ClassicalFluidResult) -> None:
         path,
         data,
         delimiter=",",
-        header="n,term,cumulative_normalized_power",
+        header="n,term,cumulative_normalized_F_y",
         comments="",
     )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Compute P/(2*rho_bar*M^2/c_s) for the classical-fluid formulas."
+        description="Compute F_y/(2*rho_bar*M^2/c_s^2) for the classical-fluid formulas."
     )
     parser.add_argument("--nu", type=float, required=True, help="nu = m1*m2/M^2")
     parser.add_argument("--e", type=float, required=True, help="orbital eccentricity")
     parser.add_argument("--n0", type=float, required=True, help="n0 = m/Omega")
     parser.add_argument("--A", type=float, required=True, help="A = a*Omega")
-    parser.add_argument(
-        "--n-max",
-        type=int,
-        default=DEFAULT_MAX_N,
-        help="safety cap for the largest harmonic; default: %(default)s",
-    )
-    parser.add_argument(
-        "--n-xi",
-        type=int,
-        default=None,
-        help=(
-            "fixed xi quadrature nodes; default is adaptive "
-            "max(512, xi_per_n*current_chunk_stop)"
-        ),
-    )
-    parser.add_argument("--n-mu", type=int, default=32, help="Gauss-Legendre mu nodes")
-    parser.add_argument("--n-phi", type=int, default=64, help="uniform phi nodes")
-    parser.add_argument(
-        "--backend",
-        choices=("auto", "cuda", "cpu"),
-        default="auto",
-        help="compute backend",
-    )
-    parser.add_argument("--chunk-size", type=int, default=64, help="harmonics per chunk")
-    parser.add_argument(
-        "--rtol",
-        type=float,
-        default=DEFAULT_RTOL,
-        help="relative tolerance for automatic harmonic-sum convergence",
-    )
-    parser.add_argument(
-        "--atol",
-        type=float,
-        default=0.0,
-        help="absolute tolerance added to the automatic convergence threshold",
-    )
-    parser.add_argument(
-        "--tail-window",
-        type=int,
-        default=DEFAULT_TAIL_WINDOW,
-        help="number of latest terms used in the tail check",
-    )
+    parser.add_argument("--n-max", type=int, default=DEFAULT_MAX_N)
+    parser.add_argument("--n-xi", type=int, default=None)
+    parser.add_argument("--n-mu", type=int, default=32)
+    parser.add_argument("--n-phi", type=int, default=64)
+    parser.add_argument("--backend", choices=("auto", "cuda", "cpu"), default="auto")
+    parser.add_argument("--chunk-size", type=int, default=64)
+    parser.add_argument("--rtol", type=float, default=DEFAULT_RTOL)
+    parser.add_argument("--atol", type=float, default=0.0)
+    parser.add_argument("--tail-window", type=int, default=DEFAULT_TAIL_WINDOW)
     parser.add_argument(
         "--consecutive-windows",
         type=int,
         default=DEFAULT_CONSECUTIVE_WINDOWS,
-        help="consecutive successful tail checks required before stopping",
     )
-    parser.add_argument(
-        "--allow-unconverged",
-        action="store_true",
-        help="return the safety-cap partial sum instead of raising on non-convergence",
-    )
-    parser.add_argument(
-        "--ignore-speed-threshold",
-        action="store_true",
-        help="compute finite-cutoff diagnostics even in the predicted divergent region",
-    )
-    parser.add_argument(
-        "--xi-per-n",
-        type=int,
-        default=12,
-        help="used only when --n-xi is omitted",
-    )
-    parser.add_argument("--save-terms", type=Path, default=None, help="optional CSV output")
+    parser.add_argument("--allow-unconverged", action="store_true")
+    parser.add_argument("--ignore-speed-threshold", action="store_true")
+    parser.add_argument("--xi-per-n", type=int, default=12)
+    parser.add_argument("--save-terms", type=Path, default=None)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    result = classical_fluid_power(
+    result = classical_fluid_force_y(
         nu=args.nu,
         e=args.e,
         n0=args.n0,
@@ -640,11 +521,11 @@ def main() -> None:
         xi_per_n=args.xi_per_n,
     )
 
-    print(f"normalized_power = {result.value:.16e}")
+    print(f"normalized_F_y = {result.value:.16e}")
     print(f"backend = {result.backend}")
     print(f"n_evaluated = 1..{result.n_values[-1]}")
     print(f"converged = {result.converged}")
-    print(f"tail_sum = {result.tail_sum:.16e}")
+    print(f"abs_tail_sum = {result.tail_sum:.16e}")
     print(f"tail_ratio = {result.tail_ratio:.16e}")
     print(f"rtol = {result.parameters['rtol']:.16e}")
     print(f"speed_threshold_ratio = {result.parameters['speed_threshold_ratio']:.16e}")

@@ -1,4 +1,3 @@
-"""Pole-subtracted radial principal-value integration."""
 
 from __future__ import annotations
 
@@ -18,7 +17,6 @@ VectorFunction = Callable[[float], np.ndarray]
 
 @dataclass(frozen=True)
 class PVIntegralResult:
-    """Measure-reduced conservative radial integral and its numerical estimate."""
 
     value: np.ndarray
     error: np.ndarray
@@ -46,7 +44,6 @@ def _integrate_vector(function: VectorFunction, lower: float, upper: float, orde
 
 
 def _small_pole_intervals(lower: float, upper: float, k_pole: float) -> tuple[tuple[float, float], ...]:
-    """Build geometric radial panels when the pole is far below ``upper``."""
 
     if not (lower == 0.0 and 0.0 < k_pole < upper / 64.0):
         return ((lower, upper),)
@@ -74,7 +71,6 @@ def _prefetch_panels(
     order: int,
     *extra: float,
 ) -> None:
-    """Prefetch all Gauss nodes in one CUDA source evaluation."""
 
     prefetch = getattr(function, "prefetch", None)
     if prefetch is None:
@@ -87,7 +83,6 @@ def _prefetch_panels(
 
 
 def _prefetch_quadrature(function: VectorFunction, lower: float, upper: float, order: int, *extra: float) -> None:
-    """Give a CUDA-backed angular function all nodes needed by one PV pass."""
 
     prefetch = getattr(function, "prefetch", None)
     if prefetch is None:
@@ -100,7 +95,6 @@ def _prefetch_quadrature(function: VectorFunction, lower: float, upper: float, o
 
 
 def _pv_log_remainder(k_pole: float, lower: float, upper: float) -> float:
-    """PV integral of `1/(k_pole^2-k^2)` on `[lower, upper]`."""
 
     def primitive(value: float) -> float:
         return math.log(abs((k_pole + value) / (k_pole - value))) / (2.0 * k_pole)
@@ -193,13 +187,6 @@ def principal_value_integral(
     k_max: float,
     radial_order: int = 32,
 ) -> PVIntegralResult:
-    """Integrate the measure-reduced conservative kernel with a PV subtraction.
-
-    The input is the angular function
-    ``Q(k) = integral dOmega Re[K_n^* K_n,e]``.  The returned result includes
-    the factor `(4*pi)^2*rho_bar/(2*pi)^3` from the radial measure, but does
-    not contain the zero/nonzero frequency pairing weight.
-    """
 
     if k_min < 0.0 or k_max <= k_min:
         raise ValueError("require 0 <= k_min < k_max")
@@ -242,7 +229,6 @@ def symmetric_excision_reference(
     k_max: float,
     epsilon_fraction: float = 1.0e-5,
 ) -> np.ndarray:
-    """Independent symmetric-excision PV reference for validation tests."""
 
     if not (0.0 < epsilon_fraction < 0.1):
         raise ValueError("epsilon_fraction must lie between 0 and 0.1")

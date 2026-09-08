@@ -1,36 +1,3 @@
-"""Calculators for the quantum-fluid normalized observables.
-
-The default quantum-fluid formulas use
-
-    a k_n = A * (n**2 + n0**2)**(1/4),    A = a * sqrt(Omega),
-
-where `n0 = m/Omega`.  This differs from the classical-fluid convention
-`A = a*Omega`.
-
-For a finite quartic-interaction sound term, pass
-`cS2_over_Omega = c_S**2/Omega`.
-Then
-
-    a k_n = A * kappa_n,
-    kappa_n**2 = (-S + sqrt(S**2 + 4*(n**2+n0**2))) / 2,
-    S = cS2_over_Omega.
-
-Returned normalizations:
-
-    power:
-        P / (2 * rho_bar * M**2 * m_phi / sqrt(Omega))
-
-    tau_z:
-        tau_z * tilde_Omega
-        / (2 * rho_bar * M**2 * m_phi / sqrt(Omega))
-
-    force_y:
-        F_y * sqrt(Omega) / m_phi
-        / (2 * rho_bar * M**2 * m_phi / sqrt(Omega))
-
-For the coordinate convention of Eq. (2.52), `force_y` denotes the
-y-component of the linear-momentum flux, `F_y`.
-"""
 
 from __future__ import annotations
 
@@ -42,7 +9,7 @@ from typing import Literal
 import numpy as np
 from numba import cuda, njit, prange
 
-from classic_fluid_power import (
+from classical_fluid_power import (
     DEFAULT_CONSECUTIVE_WINDOWS,
     DEFAULT_MAX_N,
     DEFAULT_RTOL,
@@ -427,7 +394,6 @@ def quantum_fluid_quantity(
     strict_convergence: bool = True,
     xi_per_n: int = 12,
 ) -> ClassicalFluidResult:
-    """Compute one normalized quantum-fluid quantity."""
 
     if quantity not in QUANTITY_INDEX:
         raise ValueError("quantity must be 'power', 'tau_z', or 'force_y'")

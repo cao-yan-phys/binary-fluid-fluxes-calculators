@@ -1,4 +1,3 @@
-"""Resolution, cutoff, and source-window convergence studies."""
 
 from __future__ import annotations
 
@@ -40,7 +39,6 @@ def convergence_study(
     *,
     harmonic_block: int = 2,
 ) -> tuple[PrecessionResult, list[ConvergenceRecord]]:
-    """Run the refinements relevant to the selected calculation engine."""
 
     base = calculate_precession(orbit, medium, config)
     records = [_record("base", "base", base)]
@@ -98,7 +96,6 @@ def source_size_scan(
     config: PrecessionConfig,
     source_sizes: tuple[float, ...] = (1.0e-1, 5.0e-2, 2.0e-2, 1.0e-2, 5.0e-3),
 ) -> list[ConvergenceRecord]:
-    """Compute a Gaussian or Lorentzian scan with the legacy validation engine."""
 
     if config.engine != "legacy_kspace_validation":
         raise ValueError("source_size_scan requires engine='legacy_kspace_validation'")

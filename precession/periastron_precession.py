@@ -1,4 +1,3 @@
-"""Orbit-averaged conservative periastron-precession calculator."""
 
 from __future__ import annotations
 
@@ -29,7 +28,6 @@ Engine = Literal["analytic", "legacy_kspace_validation"]
 
 @dataclass(frozen=True)
 class PrecessionConfig:
-    """Resolution settings and calculation-engine selection."""
 
     n_max: int = 8
     n_ell: int = 256
@@ -52,7 +50,6 @@ class PrecessionConfig:
 
     @classmethod
     def fast(cls) -> "PrecessionConfig":
-        """Compact point-source real-space diagnostic preset."""
 
         return cls(
             n_max=8,
@@ -65,13 +62,11 @@ class PrecessionConfig:
 
     @classmethod
     def standard(cls) -> "PrecessionConfig":
-        """Default point-source analytic preset."""
 
         return cls()
 
     @classmethod
     def validation(cls) -> "PrecessionConfig":
-        """Higher-resolution orbital-grid preset for comparison with refinements."""
 
         return cls(
             n_max=20,
@@ -130,7 +125,6 @@ class HarmonicContribution:
 
 @dataclass(frozen=True)
 class PrecessionResult:
-    """Conservative precession result with static/oscillatory decomposition."""
 
     delta_varpi_static: float | None
     delta_varpi_osc: float | None
@@ -172,7 +166,6 @@ class PrecessionResult:
         return data
 
     def write(self, output_dir: Path) -> None:
-        """Write the machine-readable result and per-harmonic table."""
 
         output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / "precession_result.json").write_text(
@@ -605,14 +598,6 @@ def calculate_precession(
     medium: ConservativeMedium,
     config: PrecessionConfig | None = None,
 ) -> PrecessionResult:
-    """Calculate static, oscillatory, and total conservative precession.
-
-    ``engine='analytic'`` is the default point-source real-space calculation.
-    ``engine='legacy_kspace_validation'`` retains the finite-window off-shell
-    PV route for independent validation.  A pure quantum-pressure static
-    sector without self-gravity is prescription dependent and does not produce
-    a unique total until an IR prescription is supplied.
-    """
 
     config = PrecessionConfig() if config is None else config
     if config.engine == "analytic":

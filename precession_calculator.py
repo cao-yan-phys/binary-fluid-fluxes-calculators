@@ -1,4 +1,3 @@
-"""Conservative periastron precession with the flux-calculator parameters."""
 
 from __future__ import annotations
 
