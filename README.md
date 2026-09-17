@@ -4,9 +4,6 @@ Numerical calculators for the time-averaged linear sound-wave fluxes generated b
 
 The numerical calculators evaluate the harmonic sums with automatic convergence checks. They support CUDA acceleration through `numba.cuda` when available and can also run on the CPU.
 
-<p align="center"><img src="docs/assets/binary_cm_orbit_sound_energy_flux.png" alt="Angular distribution of sound-wave energy flux" width="760"></p>
-<p align="center">(parameters: <code>nu=0.20</code>, <code>e=0.45</code>, <code>n0=0</code>, <code>A=a*Omega=0.55</code>)</p>
-
 ## Contents
 
 - `classical_fluid.py`: normalized classical-fluid energy, angular-momentum, and linear-momentum fluxes, `P`, `tau_z`, and `F_y`.
@@ -196,7 +193,3 @@ python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
 ## References
 
 - G. Eytan, V. Desjacques, and Y. B. Ginat, [arXiv:2509.15632](https://arxiv.org/abs/2509.15632). This repository implements only their single-perturber result in `eytan_sound_wave_coefficients.py`.
-
-# Periastron Precession Calculators
-
-The `precession/` module calculates the conservative periastron precession of an eccentric binary in homogeneous classical-fluid and quantum-fluid backgrounds at rest in the binary center-of-mass frame, using a time-symmetric linear response prescription.  Its parameter adapters use the same `nu`, `e`, `n0`, and `A` conventions as the flux calculators: `A = a*Omega` for a classical fluid and `A = a*sqrt(Omega)` for a quantum fluid.  Self-gravity may be included or omitted for either fluid.  `precession_calculator.py` provides the command-line interface; the default point-source implementation uses real-space response kernels and uses CUDA for the double-orbit averages when available, while the finite-window principal-value route is retained for validation.
