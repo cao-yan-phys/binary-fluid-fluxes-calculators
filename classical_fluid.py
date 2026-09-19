@@ -37,6 +37,8 @@ def classical_fluid_quantity(
     e: float,
     n0: float,
     A: float,
+    R1_over_a: float = 0.0,
+    R2_over_a: float = 0.0,
     n_max: int = DEFAULT_MAX_N,
     n_xi: int | None = None,
     n_mu: int = 32,
@@ -66,6 +68,8 @@ def classical_fluid_quantity(
         e=e,
         n0=n0,
         A=A,
+        R1_over_a=R1_over_a,
+        R2_over_a=R2_over_a,
         n_max=n_max,
         n_xi=n_xi,
         n_mu=n_mu,
@@ -111,6 +115,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--e", type=float, required=True, help="orbital eccentricity")
     parser.add_argument("--n0", type=float, required=True, help="n0 = m/Omega")
     parser.add_argument("--A", type=float, required=True, help="A = a*Omega")
+    parser.add_argument("--r1-over-a", dest="R1_over_a", type=float, default=0.0)
+    parser.add_argument("--r2-over-a", dest="R2_over_a", type=float, default=0.0)
     parser.add_argument("--n-max", type=int, default=DEFAULT_MAX_N)
     parser.add_argument("--n-xi", type=int, default=None)
     parser.add_argument("--n-mu", type=int, default=32)
@@ -136,6 +142,8 @@ def main() -> None:
         e=args.e,
         n0=args.n0,
         A=args.A,
+        R1_over_a=args.R1_over_a,
+        R2_over_a=args.R2_over_a,
         n_max=args.n_max,
         n_xi=args.n_xi,
         n_mu=args.n_mu,

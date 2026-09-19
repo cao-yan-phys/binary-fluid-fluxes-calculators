@@ -49,9 +49,10 @@ def parse_args() -> argparse.Namespace:
         "--single-nu-scale",
         type=float,
         default=None,
-        help="nu^2 factor used for the fixed-center single-perturber analytic markers; default=min(nu-values).",
+        help="nu^2 factor used for the single-perturber analytic markers; default=min(nu-values).",
     )
     parser.add_argument("--linear-y", action="store_true")
+    parser.add_argument("--recompute", action="store_true")
     return parser.parse_args()
 
 
@@ -243,12 +244,12 @@ def save_plot(
         linewidths=0.45,
         zorder=5,
     )
-    ax.set_xlabel(r"$\mathcal{M}$", fontsize=18)
-    ax.set_ylabel(r"$P/(2\bar\rho M^2/c_s)$", fontsize=18)
+    ax.set_xlabel(r"$\mathcal{M}$", fontsize=20)
+    ax.set_ylabel(r"$P/(2\bar\rho M^2/c_s)$", fontsize=20)
     if not args.linear_y:
         ax.set_yscale("log")
     ax.grid(True, which="both", alpha=0.25)
-    ax.tick_params(axis="both", which="major", labelsize=14)
+    ax.tick_params(axis="both", which="major", labelsize=15)
 
     color_handles = [
         mlines.Line2D([], [], color=color_for_nu[nu], lw=2.2, label=rf"$\nu={format_nu(nu)}$")
@@ -273,12 +274,12 @@ def save_plot(
             marker="o",
             linestyle="None",
             markersize=5.8,
-            label="fixed-center analytic",
+            label="single-perturber analytic",
         ),
     ]
-    legend1 = ax.legend(handles=color_handles, loc="upper left", fontsize=12)
+    legend1 = ax.legend(handles=color_handles, loc="upper left", fontsize=13)
     ax.add_artist(legend1)
-    ax.legend(handles=style_handles, loc="lower right", fontsize=12)
+    ax.legend(handles=style_handles, loc="lower right", fontsize=13)
 
     max_crit = max(circular_uv_mach_limit(nu) for nu in nu_values)
     ax.set_xlim(args.mach_min * 0.75, max_crit * 1.02)
@@ -297,13 +298,24 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     single_nu_scale = float(args.single_nu_scale) if args.single_nu_scale is not None else min(args.nu_values)
 
-    numeric = compute_numeric_rows(args)
-    equal_points, single_points = build_reference_points(args, single_nu_scale)
-
     numeric_path = args.output_dir / "circular_power_nu_numeric.csv"
     refs_path = args.output_dir / "circular_power_nu_reference_points.csv"
-    numeric.to_csv(numeric_path, index=False)
-    pd.concat([equal_points, single_points], ignore_index=True, sort=False).to_csv(refs_path, index=False)
+    if args.recompute:
+        numeric = compute_numeric_rows(args)
+        equal_points, single_points = build_reference_points(args, single_nu_scale)
+        numeric.to_csv(numeric_path, index=False)
+        pd.concat([equal_points, single_points], ignore_index=True, sort=False).to_csv(refs_path, index=False)
+    else:
+        if not numeric_path.exists() or not refs_path.exists():
+            raise FileNotFoundError(
+                "numeric plot data are missing; rerun once with --recompute to create the cache"
+            )
+        numeric = pd.read_csv(numeric_path)
+        reference_points = pd.read_csv(refs_path)
+        equal_points = reference_points[reference_points["kind"] == "equal_mass_analytic"].copy()
+        single_points = reference_points[
+            reference_points["kind"] == "single_perturber_analytic_scaled"
+        ].copy()
     save_plot(numeric, equal_points, single_points, args, single_nu_scale)
 
     summary = {

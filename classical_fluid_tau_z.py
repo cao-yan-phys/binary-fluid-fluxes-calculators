@@ -20,6 +20,7 @@ from classical_fluid_power import (
     DivergenceError,
     build_quadrature,
     mass_fractions_from_nu,
+    point_source_speed_threshold_violation,
     recommended_n_xi,
     speed_threshold_ratio,
 )
@@ -41,6 +42,8 @@ def _validate_inputs(
     e: float,
     n0: float,
     A: float,
+    R1_over_a: float,
+    R2_over_a: float,
     n_max: int,
     n_xi: int | None,
     n_mu: int,
@@ -53,6 +56,8 @@ def _validate_inputs(
         raise ValueError("n0 must be non-negative")
     if A < 0.0:
         raise ValueError("A = a*Omega must be non-negative")
+    if R1_over_a < 0.0 or R2_over_a < 0.0:
+        raise ValueError("R1_over_a and R2_over_a must be non-negative")
     if n_max < 1:
         raise ValueError("n_max must be at least 1")
     if n_xi is not None and n_xi < 8:
@@ -79,6 +84,8 @@ def _tau_z_terms_cpu(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
+    R1_over_a: float,
+    R2_over_a: float,
 ) -> np.ndarray:
     out = np.zeros(n_values.size, dtype=np.float64)
     n_phi = cos_phi.size
@@ -90,6 +97,18 @@ def _tau_z_terms_cpu(
         ratio = n0 / n_float
         dispersion = math.sqrt(1.0 + ratio * ratio)
         ak = A * n_float * dispersion
+        x1 = ak * R1_over_a
+        x2 = ak * R2_over_a
+        if x1 < 1.0e-3:
+            x1_sq = x1 * x1
+            w1 = 1.0 - x1_sq / 10.0 + x1_sq * x1_sq / 280.0
+        else:
+            w1 = 3.0 * (math.sin(x1) - x1 * math.cos(x1)) / (x1 * x1 * x1)
+        if x2 < 1.0e-3:
+            x2_sq = x2 * x2
+            w2 = 1.0 - x2_sq / 10.0 + x2_sq * x2_sq / 280.0
+        else:
+            w2 = 3.0 * (math.sin(x2) - x2 * math.cos(x2)) / (x2 * x2 * x2)
         harmonic_sum = 0.0
 
         for i_mu in range(mu.size):
@@ -128,10 +147,10 @@ def _tau_z_terms_cpu(
                     sin_q2 = math.sin(q2 * z)
                     cos_q2 = math.cos(q2 * z)
 
-                    bracket_re = q1 * cos_q2 + q2 * cos_q1
-                    bracket_im = -q1 * sin_q2 + q2 * sin_q1
-                    dbracket_re = -q1 * q2 * z_phi * (sin_q1 + sin_q2)
-                    dbracket_im = q1 * q2 * z_phi * (cos_q1 - cos_q2)
+                    bracket_re = q1 * w1 * cos_q2 + q2 * w2 * cos_q1
+                    bracket_im = -q1 * w1 * sin_q2 + q2 * w2 * sin_q1
+                    dbracket_re = -q1 * q2 * z_phi * (w1 * sin_q2 + w2 * sin_q1)
+                    dbracket_im = q1 * q2 * z_phi * (w2 * cos_q1 - w1 * cos_q2)
                     jac = 1.0 - e * cxi
 
                     k_re += jac * (base_re * bracket_re - base_im * bracket_im)
@@ -144,8 +163,6 @@ def _tau_z_terms_cpu(
                 dk_re /= n_xi
                 dk_im /= n_xi
 
-                # Re[(-i)(-K d_phi K*)] = Im[-K d_phi K*]
-                # = Re(K) Im(d_phi K) - Im(K) Re(d_phi K).
                 torque_density = k_re * dk_im - k_im * dk_re
                 harmonic_sum += mu_weight * phi_weight * torque_density
 
@@ -170,6 +187,8 @@ def _tau_z_terms_cuda_kernel(
     sqrt_one_minus_e2,
     A,
     n0,
+    R1_over_a,
+    R2_over_a,
     out,
 ):
     idx = cuda.grid(1)
@@ -190,6 +209,18 @@ def _tau_z_terms_cuda_kernel(
     ratio = n0 / n_float
     dispersion = math.sqrt(1.0 + ratio * ratio)
     ak = A * n_float * dispersion
+    x1 = ak * R1_over_a
+    x2 = ak * R2_over_a
+    if x1 < 1.0e-3:
+        x1_sq = x1 * x1
+        w1 = 1.0 - x1_sq / 10.0 + x1_sq * x1_sq / 280.0
+    else:
+        w1 = 3.0 * (math.sin(x1) - x1 * math.cos(x1)) / (x1 * x1 * x1)
+    if x2 < 1.0e-3:
+        x2_sq = x2 * x2
+        w2 = 1.0 - x2_sq / 10.0 + x2_sq * x2_sq / 280.0
+    else:
+        w2 = 3.0 * (math.sin(x2) - x2 * math.cos(x2)) / (x2 * x2 * x2)
 
     mu_i = mu[i_mu]
     sin_theta_sq = 1.0 - mu_i * mu_i
@@ -219,10 +250,10 @@ def _tau_z_terms_cuda_kernel(
         sin_q2 = math.sin(q2 * z)
         cos_q2 = math.cos(q2 * z)
 
-        bracket_re = q1 * cos_q2 + q2 * cos_q1
-        bracket_im = -q1 * sin_q2 + q2 * sin_q1
-        dbracket_re = -q1 * q2 * z_phi * (sin_q1 + sin_q2)
-        dbracket_im = q1 * q2 * z_phi * (cos_q1 - cos_q2)
+        bracket_re = q1 * w1 * cos_q2 + q2 * w2 * cos_q1
+        bracket_im = -q1 * w1 * sin_q2 + q2 * w2 * sin_q1
+        dbracket_re = -q1 * q2 * z_phi * (w1 * sin_q2 + w2 * sin_q1)
+        dbracket_im = q1 * q2 * z_phi * (w2 * cos_q1 - w1 * cos_q2)
         jac = 1.0 - e * cxi
 
         k_re += jac * (base_re * bracket_re - base_im * bracket_im)
@@ -251,6 +282,8 @@ def _compute_tau_z_terms_cuda(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
+    R1_over_a: float,
+    R2_over_a: float,
 ) -> np.ndarray:
     mu, w_mu, cos_phi, sin_phi, cos_xi, sin_xi, xi_minus_e_sin_xi = quadrature
     d_n_values = cuda.to_device(n_values.astype(np.int32, copy=False))
@@ -281,6 +314,8 @@ def _compute_tau_z_terms_cuda(
         sqrt_one_minus_e2,
         A,
         n0,
+        R1_over_a,
+        R2_over_a,
         d_out,
     )
     cuda.synchronize()
@@ -297,6 +332,8 @@ def _compute_tau_z_terms_cpu(
     sqrt_one_minus_e2: float,
     A: float,
     n0: float,
+    R1_over_a: float,
+    R2_over_a: float,
 ) -> np.ndarray:
     return _tau_z_terms_cpu(
         n_values.astype(np.int32, copy=False),
@@ -307,6 +344,8 @@ def _compute_tau_z_terms_cpu(
         sqrt_one_minus_e2,
         A,
         n0,
+        R1_over_a,
+        R2_over_a,
     )
 
 
@@ -316,6 +355,8 @@ def classical_fluid_tau_z(
     e: float,
     n0: float,
     A: float,
+    R1_over_a: float = 0.0,
+    R2_over_a: float = 0.0,
     n_max: int = DEFAULT_MAX_N,
     n_xi: int | None = None,
     n_mu: int = 32,
@@ -336,6 +377,8 @@ def classical_fluid_tau_z(
         e=e,
         n0=n0,
         A=A,
+        R1_over_a=R1_over_a,
+        R2_over_a=R2_over_a,
         n_max=n_max,
         n_xi=n_xi,
         n_mu=n_mu,
@@ -357,11 +400,12 @@ def classical_fluid_tau_z(
         raise ValueError("xi_per_n must be at least 2")
 
     threshold_ratio = speed_threshold_ratio(nu, e, A)
-    if speed_threshold_guard and threshold_ratio >= 1.0:
+    if speed_threshold_guard and point_source_speed_threshold_violation(
+        nu, e, A, R1_over_a, R2_over_a
+    ):
         raise DivergenceError(
-            "parameters satisfy the large-n body-speed divergence criterion: "
-            "max(m1/M,m2/M) * A * sqrt((1+e)/(1-e)) "
-            f"= {threshold_ratio:.12g} >= 1."
+            "a point-source body satisfies the large-n body-speed divergence criterion; "
+            "assign it a nonzero radius or use a fixed finite cutoff."
         )
 
     q1, q2 = mass_fractions_from_nu(nu)
@@ -407,6 +451,8 @@ def classical_fluid_tau_z(
             sqrt_one_minus_e2=sqrt_one_minus_e2,
             A=A,
             n0=n0,
+            R1_over_a=R1_over_a,
+            R2_over_a=R2_over_a,
         )
         all_n.append(n_values.copy())
         all_terms.append(terms)
@@ -463,6 +509,8 @@ def classical_fluid_tau_z(
             "e": float(e),
             "n0": float(n0),
             "A": float(A),
+            "R1_over_a": float(R1_over_a),
+            "R2_over_a": float(R2_over_a),
             "n_max_safety": int(n_max),
             "n_max_evaluated": int(n_done[-1]),
             "n_xi": None if n_xi is None else int(n_xi),
@@ -508,6 +556,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--e", type=float, required=True, help="orbital eccentricity")
     parser.add_argument("--n0", type=float, required=True, help="n0 = m/Omega")
     parser.add_argument("--A", type=float, required=True, help="A = a*Omega")
+    parser.add_argument("--r1-over-a", dest="R1_over_a", type=float, default=0.0)
+    parser.add_argument("--r2-over-a", dest="R2_over_a", type=float, default=0.0)
     parser.add_argument("--n-max", type=int, default=DEFAULT_MAX_N)
     parser.add_argument("--n-xi", type=int, default=None)
     parser.add_argument("--n-mu", type=int, default=32)
@@ -536,6 +586,8 @@ def main() -> None:
         e=args.e,
         n0=args.n0,
         A=args.A,
+        R1_over_a=args.R1_over_a,
+        R2_over_a=args.R2_over_a,
         n_max=args.n_max,
         n_xi=args.n_xi,
         n_mu=args.n_mu,

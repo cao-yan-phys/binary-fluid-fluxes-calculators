@@ -239,7 +239,7 @@ def save_plot(df: pd.DataFrame, args: argparse.Namespace, output_dir: Path) -> N
     labels = {0.0: r"$n_0=0$", 1.0: r"$n_0=1$"}
     quantities = [
         ("P_hat", r"$P/(2\bar\rho\nu^2M^2/c_s)$"),
-        ("tau_hat", r"$\tau_z\Omega/(2\bar\rho\nu^2M^2/c_s)$"),
+        ("tau_hat", r"$\tau_z\tilde\Omega/(2\bar\rho\nu^2M^2/c_s)$"),
         ("minus_F_y_hat", r"$-F_y/(2\bar\rho\nu^2M^2/c_s^2)$"),
     ]
 
@@ -261,7 +261,7 @@ def save_plot(df: pd.DataFrame, args: argparse.Namespace, output_dir: Path) -> N
             color="0.45",
             lw=1.9,
             ls="-.",
-            label="fixed-center",
+            label="single-perturber",
         )
         if col in ("P_hat", "tau_hat"):
             for n0, group in quad.groupby("n0"):
@@ -280,7 +280,7 @@ def save_plot(df: pd.DataFrame, args: argparse.Namespace, output_dir: Path) -> N
                 "o",
                 ms=4.5,
                 color="black",
-                label="Eytan",
+                label=r"$\mathrm{Eytan}\endash\mathrm{Desjacques}\endash\mathrm{Ginat}$",
             )
         ax.set_xlabel(r"$\mathcal{M}$", fontsize=14)
         ax.set_ylabel(ylabel, fontsize=14)
@@ -333,7 +333,7 @@ def main() -> None:
         "n0_values": [0, 1],
         "normalization": {
             "P_hat": "P/(2*rho_bar*nu^2*M^2/c_s)",
-            "tau_hat": "tau_z*Omega/(2*rho_bar*nu^2*M^2/c_s)",
+            "tau_hat": "tau_z*tilde_Omega/(2*rho_bar*nu^2*M^2/c_s)",
             "F_y_hat": "F_y/(2*rho_bar*nu^2*M^2/c_s^2)",
             "Eytan": "P_hat=2*pi*P_shape, tau_hat=2*pi*A*tau_z_shape",
         },
@@ -356,25 +356,6 @@ def main() -> None:
     }
     summary_path = args.output_dir / "paper_fig1_emri_fluxes_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    report = [
-        "# Paper Fig. 1: EMRI Fluxes",
-        "",
-        "Files:",
-        "",
-        "- `paper_fig1_emri_fluxes.png/pdf`",
-        "- `paper_fig1_emri_fluxes_data.csv`",
-        "- `paper_fig1_emri_fluxes_summary.json`",
-        "",
-        "Summary:",
-        "",
-        "```json",
-        json.dumps(summary, indent=2),
-        "```",
-    ]
-    (args.output_dir / "paper_fig1_emri_fluxes_REPORT.md").write_text(
-        "\n".join(report) + "\n",
-        encoding="utf-8",
-    )
     print(f"csv = {csv_path}")
     print(f"figure = {args.output_dir / 'paper_fig1_emri_fluxes.png'}")
     print(json.dumps(summary, indent=2))

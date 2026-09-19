@@ -30,11 +30,6 @@ def parse_args() -> argparse.Namespace:
         default=Path("outputs/paper_plots"),
     )
     parser.add_argument("--figure-stem", type=str, default="paper_fig3_nu02_ecc_fluxes")
-    parser.add_argument(
-        "--report-title",
-        type=str,
-        default="Paper Fig. 3: Classical nu=0.2 Eccentricity Scan",
-    )
     parser.add_argument("--backend", choices=("auto", "cuda", "cpu"), default="cuda")
     parser.add_argument("--eccentricities", type=float, nargs="+", default=[0.0, 0.2, 0.4, 0.8])
     parser.add_argument("--nu", type=float, default=0.20)
@@ -103,7 +98,6 @@ def compute_rows(args: argparse.Namespace) -> pd.DataFrame:
                 p = classical_fluid_power(**common)
                 tau = classical_fluid_tau_z(**common)
                 if abs(args.nu - 0.25) < 1.0e-14:
-                    # Equal masses have no net orbit-averaged y-component of linear-momentum flux by symmetry.
                     fy_value = 0.0
                     minus_fy = np.nan
                     fy_converged = True
@@ -170,7 +164,7 @@ def save_plot(df: pd.DataFrame, args: argparse.Namespace, output_dir: Path) -> N
     fig, axes = plt.subplots(1, 3, figsize=(12.8, 3.8), sharex=True)
     quantities = [
         ("P_hat", r"$P/(2\bar\rho M^2/c_s)$"),
-        ("tau_hat", r"$\tau_z\Omega/(2\bar\rho M^2/c_s)$"),
+        ("tau_hat", r"$\tau_z\tilde\Omega/(2\bar\rho M^2/c_s)$"),
         ("minus_F_y_hat", r"$-F_y/(2\bar\rho M^2/c_s^2)$"),
     ]
     color_cycle = plt.rcParams["axes.prop_cycle"].by_key()["color"]
@@ -264,7 +258,7 @@ def main() -> None:
         "curve_fraction_of_Mcrit": args.curve_fraction,
         "normalization": {
             "P_hat": "P/(2*rho_bar*M^2/c_s)",
-            "tau_hat": "tau_z*Omega/(2*rho_bar*M^2/c_s)",
+            "tau_hat": "tau_z*tilde_Omega/(2*rho_bar*M^2/c_s)",
             "F_y_hat": "F_y/(2*rho_bar*M^2/c_s^2)",
         },
         "convergence": {
@@ -277,27 +271,6 @@ def main() -> None:
     }
     summary_path = args.output_dir / f"{args.figure_stem}_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    report = [
-        f"# {args.report_title}",
-        "",
-        "Files:",
-        "",
-        f"- `{args.figure_stem}.png/pdf`",
-        f"- `{args.figure_stem}_data.csv`",
-        f"- `{args.figure_stem}_n0_monotonic_check.csv`",
-        f"- `{args.figure_stem}_summary.json`",
-        "",
-        "Summary:",
-        "",
-        "```json",
-        json.dumps(summary, indent=2),
-        "```",
-    ]
-    (args.output_dir / f"{args.figure_stem}_REPORT.md").write_text(
-        "\n".join(report) + "\n",
-        encoding="utf-8",
-    )
-
     print(f"figure = {args.output_dir / f'{args.figure_stem}.png'}")
     print(f"data = {data_path}")
     print(f"monotonic_check = {mono_path}")

@@ -54,7 +54,6 @@ def circular_equal_mass_power(
     last_n = 0
     tail_ratio = math.inf
 
-    # Equal masses only have even harmonics in the circular orbit.
     even_values = np.arange(2, n_max + 1, 2, dtype=np.int32)
     for start in range(0, even_values.size, chunk_size):
         n_chunk = even_values[start : start + chunk_size].astype(np.float64)
@@ -130,8 +129,7 @@ def compute_curves() -> pd.DataFrame:
 
 def compute_quadrupole_points() -> pd.DataFrame:
     rows: list[dict[str, float | int | bool | str | None]] = []
-    # Keep these sparse and in the controlled small-a*k regime.
-    A_values = np.array([0.30, 0.45, 0.65, 0.90, 1.20, 1.55, 1.95, 2.40, 3.00])
+    A_values = np.linspace(0.30, 3.00, 9)
     for n0 in (0.0, 1.0):
         for A in A_values:
             quad = quantum_quadrupole_flux_normalized(
@@ -183,7 +181,7 @@ def save_plot(df_full: pd.DataFrame, df_quad: pd.DataFrame) -> None:
             qgroup["M_Q"],
             qgroup["P_hat"],
             marker=markers[n0],
-            s=42,
+            s=20,
             facecolors="none",
             edgecolors=colors[n0],
             linewidths=1.45,

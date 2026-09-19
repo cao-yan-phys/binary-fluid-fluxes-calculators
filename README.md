@@ -9,7 +9,7 @@ The numerical calculators evaluate the harmonic sums with automatic convergence 
 - `classical_fluid.py`: normalized classical-fluid energy, angular-momentum, and linear-momentum fluxes, `P`, `tau_z`, and `F_y`.
 - `quantum_fluid.py`: normalized quantum-fluid energy, angular-momentum, and linear-momentum fluxes, `P`, `tau_z`, and `F_y`.
 - `quadrupole_fluxes.py`: classical-fluid and $c_S=0$ quantum-fluid fluxes at quadrupole order (quadrupole + monopole radiation).
-- `single_perturber_classical.py`: classical-fluid flux calculator for a fixed-center single perturber, using the same harmonic-sum method as the binary calculators.
+- `single_perturber_classical.py`: classical-fluid flux calculator for a single perturber, using the same harmonic-sum method as the binary calculators.
 - `eytan_sound_wave_coefficients.py`: finite-cutoff calculator for the $n_0=0$ Eytan--Desjacques--Ginat single-perturber coefficients.
 - `classical_fluid_quadrupole.py`: closed-form $n_0=0$ classical-fluid fluxes at quadrupole order.
 - `examples/quickstart.py`: minimal usage example and smoke test.
@@ -114,7 +114,9 @@ Consequently, the same dimensionless `n0` is used for the classical and quantum 
 n0 = sqrt(4*pi*rho_bar)/tildeOmega.
 ```
 
-The fixed-center single-perturber calculator `single_perturber_classical.py` uses the same classical parameter, `A = a*Omega = a*tildeOmega/c_s`, and returns
+The optional uniform-sphere model uses `R1_over_a = R_1/a` and `R2_over_a = R_2/a`; both default to zero for point sources. For body $I$, the source factor is multiplied by $W(k_nR_I)=3[\sin(k_nR_I)-k_nR_I\cos(k_nR_I)]/(k_nR_I)^3$.
+
+The single-perturber calculator `single_perturber_classical.py` uses the same classical parameter, `A = a*Omega = a*tildeOmega/c_s`, and returns
 
 ```text
 single_perturber_power().value = P/(2*rho_bar*m_p^2/c_s),
@@ -124,7 +126,7 @@ single_perturber_force_y().value = F_y/(2*rho_bar*m_p^2/c_s^2).
 
 Here, `m_p` denotes the perturber mass.
 
-The Eytan--Desjacques--Ginat helper `eytan_sound_wave_coefficients.py` calculates the $n_0=0$ fixed-center single-perturber coefficients. It uses `A = a*Omega = a*tildeOmega/c_s`. The returned `P_shape` and `tau_z_shape` are converted to normalized single-perturber fluxes according to
+The Eytan--Desjacques--Ginat helper `eytan_sound_wave_coefficients.py` calculates the $n_0=0$ single-perturber coefficients. It uses `A = a*Omega = a*tildeOmega/c_s`. The returned `P_shape` and `tau_z_shape` are converted to normalized single-perturber fluxes according to
 
 ```text
 P/(2*rho_bar*m_p^2/c_s) = 2*pi*P_shape,
@@ -179,14 +181,16 @@ The scripts in `paper_plots/` save their output under `outputs/paper_plots/`.
 python paper_plots/plot_circular_power_nu.py
 python paper_plots/plot_paper_fig1_emri_fluxes.py
 python paper_plots/plot_paper_fig3_nu02_ecc_fluxes.py
+python paper_plots/plot_paper_fig3_nu02_ecc_edot.py
 python paper_plots/plot_quantum_equal_mass_power_curves.py
 python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
+python paper_plots/plot_paper_fig3_quantum_nu02_ecc_edot.py
 ```
 
 ## Notes
 
 - By default, the infinite harmonic sums are evaluated adaptively rather than truncated at a fixed harmonic. Successive chunks are included until the recent tail contributions remain below the requested tolerance for several consecutive checks.
-- The classical-fluid binary calculators check the large-harmonic divergence criterion before evaluating the sum.
+- The classical-fluid point-source binary calculators check the large-harmonic divergence criterion before evaluating the sum.
 - Please verify convergence settings for each new parameter regime.
 - The quantum fluid is treated as a classical field.
 
