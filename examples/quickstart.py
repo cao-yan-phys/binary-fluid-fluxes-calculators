@@ -9,7 +9,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from classical_fluid import classical_fluid_force_y, classical_fluid_power, classical_fluid_tau_z
-from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients
+from edg_single_perturber_coefficients import edg_single_perturber_coefficients
 from quadrupole_fluxes import quantum_quadrupole_flux_normalized
 from quantum_fluid import quantum_fluid_force_y, quantum_fluid_power, quantum_fluid_tau_z
 
@@ -53,7 +53,7 @@ def main() -> None:
         n_max=256,
         strict_convergence=False,
     )
-    eytan = eytan_sound_wave_coefficients(
+    edg = edg_single_perturber_coefficients(
         A=0.5,
         e=0.2,
         jmax=8,
@@ -77,9 +77,9 @@ def main() -> None:
     print(f"  P_hat       = {quad_quantum.P:.8e}")
     print(f"  tau_hat     = {quad_quantum.tau_z_tildeOmega:.8e}")
 
-    print("\nEytan single-perturber coefficient check")
-    print(f"  IE/A        = {eytan.P_shape:.8e}")
-    print(f"  IL/A^2      = {eytan.tau_z_shape:.8e}")
+    print("\nEytan--Desjacques--Ginat single-perturber coefficient check")
+    print(f"  IE/A        = {edg.P_shape:.8e}")
+    print(f"  IL/A^2      = {edg.tau_z_shape:.8e}")
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from classical_fluid import classical_fluid_force_y, classical_fluid_power, classical_fluid_tau_z
-from eytan_sound_wave_coefficients import eytan_sound_wave_coefficients as eytan_friction_coefficients
+from edg_single_perturber_coefficients import edg_single_perturber_coefficients
 from quadrupole_fluxes import classical_quadrupole_flux_normalized
 from single_perturber_classical import (
     single_perturber_force_y,
@@ -45,10 +45,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--n-mu", type=int, default=24)
     parser.add_argument("--n-phi", type=int, default=48)
     parser.add_argument("--xi-per-n", type=int, default=4)
-    parser.add_argument("--eytan-lmax", type=int, default=20)
-    parser.add_argument("--eytan-jmax", type=int, default=20)
-    parser.add_argument("--eytan-points", type=int, default=8)
-    parser.add_argument("--eytan-n-xi", type=int, default=8192)
+    parser.add_argument("--edg-lmax", type=int, default=20)
+    parser.add_argument("--edg-jmax", type=int, default=20)
+    parser.add_argument("--edg-points", type=int, default=8)
+    parser.add_argument("--edg-n-xi", type=int, default=8192)
     return parser.parse_args()
 
 
@@ -198,21 +198,21 @@ def compute_fixed_center_rows(args: argparse.Namespace) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def compute_eytan_rows(args: argparse.Namespace) -> pd.DataFrame:
+def compute_edg_rows(args: argparse.Namespace) -> pd.DataFrame:
     rows: list[dict[str, float | int | bool | str]] = []
-    mach_values = np.linspace(args.mach_min, args.mach_max, args.eytan_points)
+    mach_values = np.linspace(args.mach_min, args.mach_max, args.edg_points)
     for idx, mach in enumerate(mach_values, start=1):
-        print(f"[Eytan {idx}/{len(mach_values)}] Mach={mach:.6g}", flush=True)
-        coeff = eytan_friction_coefficients(
+        print(f"[EDG {idx}/{len(mach_values)}] Mach={mach:.6g}", flush=True)
+        coeff = edg_single_perturber_coefficients(
             A=float(mach),
             e=args.e,
-            jmax=args.eytan_jmax,
-            lmax=args.eytan_lmax,
-            n_xi=args.eytan_n_xi,
+            jmax=args.edg_jmax,
+            lmax=args.edg_lmax,
+            n_xi=args.edg_n_xi,
         )
         rows.append(
             {
-                "kind": "eytan_lmax20",
+                "kind": "edg_lmax20",
                 "e": float(args.e),
                 "n0": 0.0,
                 "Mach": float(mach),
@@ -222,8 +222,8 @@ def compute_eytan_rows(args: argparse.Namespace) -> pd.DataFrame:
                 "minus_F_y_hat": np.nan,
                 "IE": float(coeff.IE),
                 "IL": float(coeff.IL),
-                "jmax": int(args.eytan_jmax),
-                "lmax": int(args.eytan_lmax),
+                "jmax": int(args.edg_jmax),
+                "lmax": int(args.edg_lmax),
             }
         )
     return pd.DataFrame(rows)
@@ -233,7 +233,7 @@ def save_plot(df: pd.DataFrame, args: argparse.Namespace, output_dir: Path) -> N
     full = df[df["kind"] == "full_binary_emri"].copy()
     quad = df[df["kind"] == "quadrupole"].copy()
     fixed = df[df["kind"] == "fixed_center_single"].copy()
-    eytan = df[df["kind"] == "eytan_lmax20"].copy()
+    edg = df[df["kind"] == "edg_lmax20"].copy()
 
     colors = {0.0: "#1f77b4", 1.0: "#d62728"}
     labels = {0.0: r"$n_0=0$", 1.0: r"$n_0=1$"}
@@ -275,8 +275,8 @@ def save_plot(df: pd.DataFrame, args: argparse.Namespace, output_dir: Path) -> N
                     label=labels[float(n0)] + " (quad)",
                 )
             ax.plot(
-                eytan["Mach"],
-                eytan[col],
+                edg["Mach"],
+                edg[col],
                 "o",
                 ms=4.5,
                 color="black",
@@ -318,8 +318,8 @@ def main() -> None:
     full = compute_full_rows(args)
     quad = compute_quadrupole_rows(args)
     fixed = compute_fixed_center_rows(args)
-    eytan = compute_eytan_rows(args)
-    df = pd.concat([full, quad, fixed, eytan], ignore_index=True, sort=False)
+    edg = compute_edg_rows(args)
+    df = pd.concat([full, quad, fixed, edg], ignore_index=True, sort=False)
 
     csv_path = args.output_dir / "paper_fig1_emri_fluxes_data.csv"
     df.to_csv(csv_path, index=False)
@@ -335,7 +335,7 @@ def main() -> None:
             "P_hat": "P/(2*rho_bar*nu^2*M^2/c_s)",
             "tau_hat": "tau_z*tilde_Omega/(2*rho_bar*nu^2*M^2/c_s)",
             "F_y_hat": "F_y/(2*rho_bar*nu^2*M^2/c_s^2)",
-            "Eytan": "P_hat=2*pi*P_shape, tau_hat=2*pi*A*tau_z_shape",
+            "EDG": "P_hat=2*pi*P_shape, tau_hat=2*pi*A*tau_z_shape",
         },
         "convergence": {
             "full_all_converged": bool(
@@ -344,11 +344,11 @@ def main() -> None:
             "max_full_n": int(full[["P_n", "tau_n", "Fy_n"]].to_numpy().max()),
             "max_full_tail": float(full[["P_tail", "tau_tail", "Fy_tail"]].to_numpy().max()),
         },
-        "eytan": {
-            "jmax": args.eytan_jmax,
-            "lmax": args.eytan_lmax,
-            "points": args.eytan_points,
-            "note": "Eytan points are single-perturber n0=0 values.",
+        "edg": {
+            "jmax": args.edg_jmax,
+            "lmax": args.edg_lmax,
+            "points": args.edg_points,
+            "note": "EDG points are single-perturber n0=0 values.",
         },
         "fixed_center_single": {
             "note": "Gray dash-dot curve is the fixed-center single-perturber high-order sum.",

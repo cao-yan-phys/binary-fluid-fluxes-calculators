@@ -10,7 +10,7 @@ from scipy.special import gammaln, lpmv, spherical_jn
 
 
 @dataclass(frozen=True)
-class EytanSoundWaveResult:
+class EDGSinglePerturberResult:
     IE: float
     IL: float
     P_shape: float
@@ -60,14 +60,14 @@ def _orbit_arrays(e: float, n_xi: int) -> tuple[np.ndarray, ...]:
     return mean_anomaly, jacobian, radius_over_a, true_anomaly
 
 
-def eytan_sound_wave_coefficients(
+def edg_single_perturber_coefficients(
     *,
     A: float,
     e: float,
     jmax: int = 20,
     lmax: int = 13,
     n_xi: int = 8192,
-) -> EytanSoundWaveResult:
+) -> EDGSinglePerturberResult:
 
     _validate_inputs(A=A, e=e, jmax=jmax, lmax=lmax, n_xi=n_xi)
     mean_anomaly, jacobian, radius_over_a, true_anomaly = _orbit_arrays(e, n_xi)
@@ -99,7 +99,7 @@ def eytan_sound_wave_coefficients(
     IL = float(A * il_sum)
     P_shape = IE / A
     tau_z_shape = IL / (A * A)
-    return EytanSoundWaveResult(
+    return EDGSinglePerturberResult(
         IE=IE,
         IL=IL,
         P_shape=P_shape,
@@ -131,7 +131,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    result = eytan_sound_wave_coefficients(
+    result = edg_single_perturber_coefficients(
         A=args.A,
         e=args.e,
         jmax=args.jmax,
