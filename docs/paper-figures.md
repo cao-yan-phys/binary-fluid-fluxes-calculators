@@ -1,0 +1,13 @@
+# Paper Figures
+
+The scripts in `paper_plots/` save their output under `outputs/paper_plots/`.
+
+```powershell
+python paper_plots/plot_circular_power_nu.py
+python paper_plots/plot_paper_fig1_emri_fluxes.py
+python paper_plots/plot_paper_fig3_nu02_ecc_fluxes.py
+python paper_plots/plot_paper_fig3_nu02_ecc_edot.py
+python paper_plots/plot_quantum_equal_mass_power_curves.py
+python paper_plots/plot_paper_fig3_quantum_nu02_ecc_fluxes.py
+python paper_plots/plot_paper_fig3_quantum_nu02_ecc_edot.py
+```

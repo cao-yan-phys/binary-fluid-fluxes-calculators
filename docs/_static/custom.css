@@ -1,0 +1,16 @@
+.rst-content div.math {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.rst-content table.docutils {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+readthedocs-flyout {
+  display: none !important;
+}

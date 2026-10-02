@@ -1,0 +1,10 @@
+project = "Binary Sound-Wave Flux Calculators"
+extensions = ["myst_parser"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+templates_path = ["_templates"]
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]
+html_theme = "sphinx_rtd_theme"
+html_show_copyright = False
+myst_enable_extensions = ["amsmath", "dollarmath"]
+myst_heading_anchors = 3
